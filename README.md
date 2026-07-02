@@ -113,6 +113,16 @@ WebServer/                              # 总仓库（Git 根仓库）
 ├── vue/                                # [子仓库] Vue 3 前端
 │   └── 用户界面、gRPC-Web 通信、实时数据展示
 │
+├── mobile/                             # [子仓库] 移动端 App
+│   ├── ios/                            # iOS App (Swift)
+│   └── android/                        # Android App (Kotlin)
+│
+├── assets/                             # [子仓库] 设计资源
+│   ├── designs/                        # UI 设计稿（Figma / Sketch）
+│   ├── icons/                          # 图标库
+│   ├── logos/                          # Logo 资源
+│   └── mockups/                        # 产品原型 / 交互稿
+│
 ├── .gitmodules                         # Git 子模块配置
 └── README.md                           # 本文件
 ```
@@ -497,6 +507,13 @@ cd vue && npm install && npm run dev
 - [ ] VideoService 视频服务（Go — 转码任务调度、流媒体 I/O）
 - [ ] SearchService 搜索服务（C++ — ES 集成、高性能排序）
 - [ ] Vue 前端 gRPC-Web 接入
+- [ ] **Mobile App** 移动端 — 用户端 App（浏览文章/博客/图片/视频）
+  - [ ] iOS App（Swift）
+  - [ ] Android App（Kotlin）
+- [ ] **UI/UX 设计** — 全平台设计资源
+  - [ ] Figma 设计稿（Vue 前端 / Mobile App）
+  - [ ] 图标库 & Logo 设计
+  - [ ] 产品原型 & 交互稿
 
 ### 阶段三：容器化部署 📋 规划中
 - [ ] Docker 容器化、Docker Compose 编排
