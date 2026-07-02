@@ -7,6 +7,7 @@
 ![C++](https://img.shields.io/badge/C++-17-%2300599C?style=flat-square&logo=c%2B%2B)
 ![Rust](https://img.shields.io/badge/Rust-1.70-%23DEA584?style=flat-square&logo=rust)
 ![Go](https://img.shields.io/badge/Go-1.21-%2300ADD8?style=flat-square&logo=go)
+![FFmpeg](https://img.shields.io/badge/FFmpeg-6.0-%23008080?style=flat-square&logo=ffmpeg)
 ![Vue](https://img.shields.io/badge/Vue-3-%234FC08D?style=flat-square&logo=vue.js)
 ![gRPC](https://img.shields.io/badge/gRPC-1.0-%234285F4?style=flat-square&logo=grpc)
 ![MySQL](https://img.shields.io/badge/MySQL-8-%234479A1?style=flat-square&logo=mysql)
@@ -35,9 +36,9 @@
 
 阶段二：微服务架构（进行中）
   gRPC 微服务框架 + 独立 Proto 仓库 + 服务拆分
-  └── 核心框架：C++ 实现网关、注册发现、配置中心、链路追踪、监控告警
-  └── 业务服务：Rust/Go 实现用户、文章、博客、图片、视频、搜索
-  └── 多语言支持：C++ / Rust / Go
+  └── 核心框架：C++ 实现网关、注册发现、配置中心、链路追踪、监控告警 + AdminConsole 内部管理面板（独立 Web UI） + ServiceConsole 业务管理面板（独立 Web UI）
+  └── 业务服务：C++ 为主（搜索、图片），Go（文章、博客、视频转码调度），Rust（用户认证）
+  └── 多语言支持：C++ 主导高性能计算密集型服务（图片处理、搜索引擎），Go 负责 I/O 密集型服务（CRUD、视频转码任务调度），Rust 负责安全敏感的用户认证
 
 阶段三：容器化部署（规划中）
   Docker + Kubernetes + CI/CD
@@ -65,8 +66,16 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   │   ├── image/                      # 图片服务接口
 │   │   ├── video/                      # 视频服务接口
 │   │   ├── search/                     # 搜索服务接口
-│   │   └── frontend/                   # 前端服务接口
+│   │   ├── frontend/                   # 前端服务接口
+│   │   ├── admin_console/              # 内部管理面板接口
+│   │   └── service_console/            # 业务管理面板接口
 │   └── build/                          # 编译输出
+│
+├── AdminConsole/                       # [子仓库] 内部管理面板 (C++) ✅ 核心
+│   └── 管理网关/注册发现/配置中心/链路追踪/监控告警的独立 Web UI 面板
+│
+├── ServiceConsole/                     # [子仓库] 业务服务管理面板 (C++) ✅ 核心
+│   └── 管理用户/文章/博客/图片/视频/搜索的独立 Web UI 面板
 │
 ├── GRPCGateway/                        # [子仓库] 网关 (C++) ✅ 核心
 │   └── 对外统一入口，协议转换，路由分发，限流控制，鉴权验证
@@ -74,13 +83,13 @@ WebServer/                              # 总仓库（Git 根仓库）
 ├── ServiceRegistry/                    # [子仓库] 服务注册发现 (C++) ✅ 核心
 │   └── 动态路由，负载均衡，健康检查，服务上下线
 │
-├── ConfigCenter/                       # [子仓库] 配置中心 (C++) ⚠️ 可选
+├── ConfigCenter/                       # [子仓库] 配置中心 (C++) ✅ 核心
 │   └── 统一配置管理，热更新，配置版本控制
 │
-├── TracingService/                     # [子仓库] 链路追踪 (C++) ⚠️ 可选
+├── TracingService/                     # [子仓库] 链路追踪 (C++) ✅ 核心
 │   └── 请求链路追踪，性能分析，故障排查
 │
-├── MonitorService/                     # [子仓库] 监控告警 (C++) ⚠️ 可选
+├── MonitorService/                     # [子仓库] 监控告警 (C++) ✅ 核心
 │   └── 指标采集，告警规则，可视化面板
 │
 ├── UserService/                        # [子仓库] 用户服务 (Rust)
@@ -92,14 +101,14 @@ WebServer/                              # 总仓库（Git 根仓库）
 ├── BlogService/                        # [子仓库] 博客服务 (Go)
 │   └── 博客管理、评论系统、点赞收藏、博客推荐
 │
-├── ImageService/                       # [子仓库] 图片服务 (Rust)
+├── ImageService/                       # [子仓库] 图片服务 (C++)
 │   └── 图片上传、缩略图生成、格式转换、CDN 分发
 │
-├── VideoService/                       # [子仓库] 视频服务 (Rust)
-│   └── 视频上传、转码处理、切片存储、流媒体播放
+├── VideoService/                       # [子仓库] 视频服务 (Go)
+│   └── 视频上传、转码任务调度（FFmpeg）、切片存储、流媒体播放
 │
-├── SearchService/                      # [子仓库] 搜索服务 (Go)
-│   └── 全文索引、搜索排序、搜索建议、索引同步
+├── SearchService/                      # [子仓库] 搜索服务 (C++)
+│   └── 全文索引、搜索排序（ES 集成）、搜索建议、索引同步
 │
 ├── vue/                                # [子仓库] Vue 3 前端
 │   └── 用户界面、gRPC-Web 通信、实时数据展示
@@ -121,35 +130,45 @@ WebServer/                              # 总仓库（Git 根仓库）
                     └──────────────┬───────────────────────┘
                                    │ gRPC-Web (通过 Nginx 代理)
                                    ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     GRPCGateway (C++)                            │
-│  对外统一入口 / HTTP-gRPC协议转换 / 路由分发 / 限流控制 / 鉴权验证 │
-└──────┬─────────────────────────────────────────────────────┬─────┘
-       │                                                     │
-       │ 服务发现                                            │ 配置拉取
-       ▼                                                     ▼
-┌──────────────────┐                                ┌──────────────────┐
-│ ServiceRegistry  │◄──────── 注册/心跳 ────────────│  ConfigCenter   │
-│  (C++)           │                                │   (C++)         │
-│ 服务注册发现      │                                │   配置中心       │
-│ 动态路由/负载均衡  │                                │   统一配置管理    │
-│ 健康检查/服务上下线 │                                │   热更新/版本控制 │
-└──────────────────┘                                └──────────────────┘
-       │                                                     │
-       │ 路由到业务服务                                       │ 配置下发
-       ▼                                                     ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                    业务微服务层                                   │
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       AdminConsole — 内部管理面板 (C++)                  │
+│             管理网关 / 注册发现 / 配置中心 / 链路追踪 / 监控告警           │
+│                      Admin Web UI（独立 HTML 面板）                      │
+│                服务治理 · 系统监控 · 配置管理 · 健康检查                   │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               │ 通过 gRPC 调用各核心服务
+                               ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        核心框架微服务（C++）                               │
+├──────────────┬───────────────┬──────────────┬──────────────────────────┤
+│ GRPCGateway  │ ServiceRegistry│ ConfigCenter │ TracingService          │
+│ 协议转换/路由  │ 注册发现/负载均衡│ 配置管理/热更新│ 链路追踪/性能分析       │
+├──────────────┴───────────────┴──────────────┴──────────────────────────┤
+│                           MonitorService                                │
+│                           监控指标/告警规则                               │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               │ 路由分发
+                               ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    ServiceConsole — 业务管理面板 (C++)                   │
+│             管理用户 / 文章 / 博客 / 图片 / 视频 / 搜索                   │
+│                      Admin Web UI（独立 HTML 面板）                      │
+│                  业务数据管理 · 运营统计 · 内容审核                       │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               │ 通过 gRPC 调用各业务服务
+                               ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                            业务微服务层                                   │
 ├────────────┬───────────┬──────────┬───────────┬─────────────────┤
 │ UserService│  Article  │   Blog   │   Image   │     Video       │
-│  (Rust)    │  (Go)     │  (Go)    │  (Rust)   │    (Rust)       │
+│  (Rust)    │  (Go)     │  (Go)    │  (C++)    │    (Go)         │
 │  :50052    │  :50053   │  :50054  │  :50055   │    :50056       │
 ├────────────┴───────────┴──────────┴───────────┴─────────────────┤
 │                           │                                     │
 │                           ▼                                     │
 │                    ┌──────────────┐                             │
 │                    │SearchService │                             │
-│                    │   (Go)       │                             │
+│                    │   (C++)      │                             │
 │                    │   :50057     │                             │
 │                    └──────┬───────┘                             │
 │                           │                                     │
@@ -159,16 +178,6 @@ WebServer/                              # 总仓库（Git 根仓库）
 │                    │  (搜索引擎)   │                             │
 │                    └──────────────┘                             │
 └──────────────────────────────────────────────────────────────────┘
-       │                                                     │
-       │ 链路追踪                                            │ 监控指标
-       ▼                                                     ▼
-┌──────────────────┐                                ┌──────────────────┐
-│ TracingService   │                                │ MonitorService  │
-│  (C++)           │                                │   (C++)         │
-│  链路追踪         │                                │   监控告警       │
-│  请求全链路跟踪    │                                │   指标采集       │
-│  性能分析/故障排查  │                                │   告警规则/可视化 │
-└──────────────────┘                                └──────────────────┘
 ```
 
 ### 核心框架组件（C++ 实现）
@@ -177,9 +186,11 @@ WebServer/                              # 总仓库（Git 根仓库）
 |--------|--------|------|------|
 | **GRPCGateway** | ✅ 核心 | 对外统一入口 | 协议转换、路由分发、限流控制、鉴权验证 |
 | **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 动态路由、负载均衡、健康检查、服务上下线 |
-| **ConfigCenter** | ✅ 可选 | 配置中心 | 统一配置管理、热更新、配置版本控制 |
-| **TracingService** | ✅ 可选 | 链路追踪 | 请求全链路跟踪、性能分析、故障排查 |
-| **MonitorService** | ✅ 可选 | 监控告警 | 指标采集、告警规则、可视化面板 |
+| **ConfigCenter** | ✅ 核心 | 配置中心 | 统一配置管理、热更新、配置版本控制 |
+| **TracingService** | ✅ 核心 | 链路追踪 | 请求全链路跟踪、性能分析、故障排查 |
+| **MonitorService** | ✅ 核心 | 监控告警 | 指标采集、告警规则、可视化面板 |
+| **AdminConsole** | ✅ 核心 | 内部管理面板 | 管理核心框架服务（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web UI |
+| **ServiceConsole** | ✅ 核心 | 业务管理面板 | 管理业务服务（用户/文章/博客/图片/视频/搜索）的独立 Web UI |
 
 ### 业务微服务（多语言）
 
@@ -188,9 +199,9 @@ WebServer/                              # 总仓库（Git 根仓库）
 | UserService | Rust | 50052 | 用户注册/登录、Token 管理、权限控制 |
 | ArticleService | Go | 50053 | 文章 CRUD、分类管理、标签管理 |
 | BlogService | Go | 50054 | 博客管理、评论系统、点赞收藏 |
-| ImageService | Rust | 50055 | 图片上传、缩略图生成、格式转换 |
-| VideoService | Rust | 50056 | 视频上传、转码处理、流媒体播放 |
-| SearchService | Go | 50057 | 全文索引、搜索排序、搜索建议 |
+| ImageService | C++ | 50055 | 图片像素级处理、缩略图生成、格式转换 |
+| VideoService | Go | 50056 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
+| SearchService | C++ | 50057 | 全文索引、搜索排序、搜索建议 |
 
 ---
 
@@ -305,7 +316,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | `UnlikePost` | post_id, user_id | success, like_count | 取消点赞 |
 | `GetRecommendations` | user_id, page, page_size | posts[], total | 博客推荐 |
 
-### ImageService — 图片服务（Rust，端口:50055）
+### ImageService — 图片服务（C++，端口:50055）
 
 | RPC | 请求 | 响应 | 说明 |
 |-----|------|------|------|
@@ -316,7 +327,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | `ProcessImage` | image_id, operations[] | image_id, url, thumbnail_url | 图片处理 |
 | `GenerateThumbnail` | image_id, width, height | thumbnail_url | 生成缩略图 |
 
-### VideoService — 视频服务（Rust，端口:50056）
+### VideoService — 视频服务（Go，端口:50056）
 
 | RPC | 请求 | 响应 | 说明 |
 |-----|------|------|------|
@@ -329,7 +340,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | `GetStreamUrl` | video_id, format, resolution | stream_url, expires_at | 获取流媒体播放地址 |
 | `GetVideoChunk` | video_id, chunk_index, format, resolution | stream<content, chunk_index, total_chunks> | 获取视频切片（服务端流） |
 
-### SearchService — 搜索服务（Go，端口:50057）
+### SearchService — 搜索服务（C++，端口:50057）
 
 | RPC | 请求 | 响应 | 说明 |
 |-----|------|------|------|
@@ -353,8 +364,8 @@ WebServer/                              # 总仓库（Git 根仓库）
 | MySQL | 8.0+ | 数据库 |
 | gRPC | 1.40+ | 微服务通信框架 |
 | Protobuf | 3.15+ | 序列化协议 |
-| Rust | 1.70+ | UserService、ImageService、VideoService |
-| Go | 1.21+ | ArticleService、BlogService、SearchService |
+| Rust | 1.70+ | UserService（安全敏感认证服务） |
+| Go | 1.21+ | ArticleService、BlogService、VideoService（I/O 密集型服务） |
 | Node.js | 18+ | 前端构建 |
 
 ### 1️⃣ 克隆仓库
@@ -387,13 +398,21 @@ cmake .. && cmake --build . && ./ConfigCenter
 cd GRPCGateway && mkdir build && cd build
 cmake .. && cmake --build . && ./GRPCGateway
 
-# 启动链路追踪（可选）
+# 启动链路追踪
 cd TracingService && mkdir build && cd build
 cmake .. && cmake --build . && ./TracingService
 
-# 启动监控告警（可选）
+# 启动监控告警
 cd MonitorService && mkdir build && cd build
 cmake .. && cmake --build . && ./MonitorService
+
+# 启动内部管理面板
+cd AdminConsole && mkdir build && cd build
+cmake .. && cmake --build . && ./AdminConsole
+
+# 启动业务管理面板
+cd ServiceConsole && mkdir build && cd build
+cmake .. && cmake --build . && ./ServiceConsole
 ```
 
 ### 4️⃣ 启动业务微服务
@@ -401,13 +420,17 @@ cmake .. && cmake --build . && ./MonitorService
 ```bash
 # Rust 服务
 cd UserService && cargo build --release && ./target/release/user-service
-cd ImageService && cargo build --release && ./target/release/image-service
-cd VideoService && cargo build --release && ./target/release/video-service
 
-# Go 服务
+# C++ 服务（高性能计算密集型）
+cd ImageService && mkdir build && cd build
+cmake .. && cmake --build . && ./ImageService
+cd SearchService && mkdir build && cd build
+cmake .. && cmake --build . && ./SearchService
+
+# Go 服务（I/O 密集型）
 cd ArticleService && go build -o article-service . && ./article-service
 cd BlogService && go build -o blog-service . && ./blog-service
-cd SearchService && go build -o search-service . && ./search-service
+cd VideoService && go build -o video-service . && ./video-service
 ```
 
 ### 5️⃣ 启动前端
@@ -426,15 +449,17 @@ cd vue && npm install && npm run dev
 |------|------|------|------|
 | GRPCGateway | C++ | 50051 | 核心框架 |
 | ServiceRegistry | C++ | 51051 | 核心框架 |
-| ConfigCenter | C++ | 51052 | 核心框架（可选） |
-| TracingService | C++ | 51053 | 核心框架（可选） |
-| MonitorService | C++ | 51054 | 核心框架（可选） |
+| ConfigCenter | C++ | 51052 | 核心框架 |
+| TracingService | C++ | 51053 | 核心框架 |
+| MonitorService | C++ | 51054 | 核心框架 |
+| AdminConsole | C++ | 51055 | 核心框架 |
+| ServiceConsole | C++ | 51056 | 核心框架 |
 | UserService | Rust | 50052 | 业务服务 |
 | ArticleService | Go | 50053 | 业务服务 |
 | BlogService | Go | 50054 | 业务服务 |
-| ImageService | Rust | 50055 | 业务服务 |
-| VideoService | Rust | 50056 | 业务服务 |
-| SearchService | Go | 50057 | 业务服务 |
+| ImageService | C++ | 50055 | 业务服务 |
+| VideoService | Go | 50056 | 业务服务 |
+| SearchService | C++ | 50057 | 业务服务 |
 | Vue 前端 | JS | 60907 | 前端 |
 
 ---
@@ -450,17 +475,27 @@ cd vue && npm install && npm run dev
 
 ### 阶段二：微服务架构 🔄 进行中
 - [x] Proto 独立仓库搭建
-- [ ] GRPCGateway 网关服务（C++）
-- [ ] ServiceRegistry 服务注册发现（C++）
-- [ ] ConfigCenter 配置中心（C++，可选）
-- [ ] TracingService 链路追踪（C++，可选）
-- [ ] MonitorService 监控告警（C++，可选）
-- [ ] UserService 用户服务（Rust）
-- [ ] ArticleService 文章服务（Go）
-- [ ] BlogService 博客服务（Go）
-- [ ] ImageService 图片服务（Rust）
-- [ ] VideoService 视频服务（Rust）
-- [ ] SearchService 搜索服务（Go）
+- [ ] **AdminConsole** 内部管理面板 (C++) — 管理网关/注册发现/配置中心/链路追踪/监控告警的独立 Web UI
+  - [ ] Admin Web UI 内部管理面板（HTML + JS）
+  - [ ] 对接 GRPCGateway 网关管理
+  - [ ] 对接 ServiceRegistry 注册发现管理
+  - [ ] 对接 ConfigCenter 配置中心管理
+  - [ ] 对接 TracingService 链路追踪管理
+  - [ ] 对接 MonitorService 监控告警管理
+- [ ] **ServiceConsole** 业务管理面板 (C++) — 管理用户/文章/博客/图片/视频/搜索的独立 Web UI
+  - [ ] Service Web UI 业务管理面板（HTML + JS）
+  - [ ] 对接 UserService 用户管理
+  - [ ] 对接 ArticleService 文章管理
+  - [ ] 对接 BlogService 博客管理
+  - [ ] 对接 ImageService 图片管理
+  - [ ] 对接 VideoService 视频管理
+  - [ ] 对接 SearchService 搜索管理
+- [ ] UserService 用户服务（Rust — 安全敏感，内存安全优势）
+- [ ] ArticleService 文章服务（Go — I/O 密集型 CRUD）
+- [ ] BlogService 博客服务（Go — I/O 密集型 CRUD）
+- [ ] ImageService 图片服务（C++ — 像素级高性能处理）
+- [ ] VideoService 视频服务（Go — 转码任务调度、流媒体 I/O）
+- [ ] SearchService 搜索服务（C++ — ES 集成、高性能排序）
 - [ ] Vue 前端 gRPC-Web 接入
 
 ### 阶段三：容器化部署 📋 规划中
