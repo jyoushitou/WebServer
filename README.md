@@ -1,6 +1,6 @@
-# WebServer - C++ gRPC 微服务框架
+# WebServer - C++ RPC 微服务框架
 
-> **从零实现的 C++ HTTP 服务器 → gRPC 微服务架构演进**
+> **从零实现的 C++ HTTP 服务器 → RPC 微服务架构演进**
 >
 > 用最底层的方式理解 Web 工作原理，用微服务架构承载业务扩展
 
@@ -9,10 +9,9 @@
 ![Go](https://img.shields.io/badge/Go-1.21-%2300ADD8?style=flat-square&logo=go)
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-6.0-%23008080?style=flat-square&logo=ffmpeg)
 ![Vue](https://img.shields.io/badge/Vue-3-%234FC08D?style=flat-square&logo=vue.js)
-![gRPC](https://img.shields.io/badge/gRPC-1.0-%234285F4?style=flat-square&logo=grpc)
-![MySQL](https://img.shields.io/badge/MySQL-8-%234479A1?style=flat-square&logo=mysql)
 ![Protobuf](https://img.shields.io/badge/Protobuf-3.15-%23FF6C37?style=flat-square&logo=protocol-buffers)
 ![Elasticsearch](https://img.shields.io/badge/Elasticsearch-7-%23005571?style=flat-square&logo=elasticsearch)
+![MySQL](https://img.shields.io/badge/MySQL-8-%234479A1?style=flat-square&logo=mysql)
 ![Docker](https://img.shields.io/badge/Docker-24-%232496ED?style=flat-square&logo=docker)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-%23326CE5?style=flat-square&logo=kubernetes)
 ![mTLS](https://img.shields.io/badge/mTLS-1.3-%23FF4B4B?style=flat-square&logo=letsencrypt)
@@ -22,7 +21,7 @@
 
 ## 📖 项目简介
 
-本项目是一个**从零开始、不依赖任何第三方 Web 框架**的 C++ HTTP 服务器，逐步演进为完整的 gRPC 微服务架构。
+本项目是一个**从零开始、不依赖任何第三方 Web 框架**的 C++ HTTP 服务器，逐步演进为完整的 Protobuf 微服务架构。
 
 > **原 C++ 单体后端已归档**：[WebSever_cpp](https://github.com/jyoushitou/WebSever_cpp.git)
 >
@@ -37,7 +36,7 @@
   └── 归档仓库：https://github.com/jyoushitou/WebSever_cpp.git
 
 阶段二：微服务架构（进行中）
-  gRPC 微服务框架 + 独立 Proto 仓库 + 服务拆分
+  手写 RPC 框架 + 独立 Proto 仓库 + 服务拆分
   │
   ├── 核心框架（C++ 实现）
   │   ├── GRPCGateway         — 对外统一入口，协议转换/路由分发/限流/鉴权
@@ -58,21 +57,19 @@
   │   │   └── VideoService    — 视频上传/FFmpeg 转码调度/流媒体 (端口:50056)
   │   └── Rust（安全敏感）
   │       ├── UserService     — 用户注册登录/Token 管理/权限控制 (端口:50052)
-  │       └── SecurityService — 数据加密解密/密钥管理/数字签名/mTLS 证书管理 (端口:51057) 🔐
+  │       └── SecurityService — 数据加密解密/密钥管理/数字签名 (端口:51057) 🔐
   │
   ├── Proto 驱动开发
   │   ├── 所有跨语言通信接口由 proto 文件统一定义在 proto/source/ 目录下
-  │   ├── 通过 protoc 编译生成 6 种语言的 gRPC 骨架代码
-  │   │   ├── protoc (内置)     → C++   → 核心框架 + ImageService + SearchService
-  │   │   ├── protoc-gen-go-grpc → Go    → ArticleService + BlogService + VideoService
-  │   │   ├── protoc-gen-tonic   → Rust  → UserService + SecurityService
-  │   │   ├── protoc-gen-grpc-swift → Swift → iOS App
-  │   │   ├── protoc-gen-grpc-kotlin → Kotlin → Android App
-  │   │   └── protoc-gen-grpc-web   → JS    → Vue 前端
-  │   └── 保证跨 6 种语言服务间的接口严格一致、类型安全
+  │   ├── 通过 protoc 的 --cpp_out / --go_out / --rust_out 编译生成各语言的序列化代码
+  │   │   ├── protoc --cpp_out   → C++   → 核心框架 + ImageService + SearchService
+  │   │   ├── protoc --go_out    → Go    → ArticleService + BlogService + VideoService
+  │   │   └── protoc --rust_out  → Rust  → UserService + SecurityService
+  │   └── 服务间通信使用自定义 TCP 帧协议 + Protobuf 序列化
   │
   └── 安全规划
-      └── SecurityService 加密安全微服务（Rust），提供全链路数据加密、密钥管理、mTLS 服务间通信加密
+      ├── SecurityService 加密安全微服务（Rust），提供数据加密、密钥管理、数字签名
+      └── CertService 证书分发微服务（C++），提供 SSL/TLS 证书自动分发、续期、Nginx 配置生成
 
 阶段三：容器化部署（规划中）
   Docker + Kubernetes + CI/CD
@@ -89,9 +86,10 @@
   │   ├── 密钥生命周期管理（自动轮换，30 天策略）
   │   └── 数字签名验签（Ed25519 / ECDSA）
   ├── 传输层安全
-  │   ├── 服务间 mTLS 双向认证（所有 gRPC 通信启用 TLS）
-  │   ├── 证书自动轮换（CA 签发，7 天轮换策略）
-  │   └── 网关统一 TLS  termination
+  │   ├── 服务间 mTLS 双向认证（所有 RPC 通信启用 TLS）
+  │   ├── 证书自动轮换（CertService 统一 CA 签发，7 天轮换策略）
+  │   ├── 网关和所有微服务均从 CertService 获取证书
+  │   └── 网关统一 TLS termination
   ├── 存储层安全
   │   ├── 数据库 TDE（透明数据加密）
   │   ├── 文件存储加密（AES-256-CBC）
@@ -139,7 +137,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── 统一管理业务数据（用户/文章/博客/图片/视频/搜索）的独立 Web 控制台
 │
 ├── GRPCGateway/                        # [子仓库] 网关 (C++) ✅ 核心
-│   └── 对外统一入口，HTTP/gRPC 协议转换、路由分发、限流熔断、身份鉴权
+│   └── 对外统一入口，HTTP/Protobuf 协议转换、路由分发、限流熔断、身份鉴权
 │
 ├── ServiceRegistry/                    # [子仓库] 服务注册发现 (C++) ✅ 核心
 │   └── 动态服务注册表，提供服务发现、健康检测、负载均衡、上下线通知
@@ -157,7 +155,10 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── 用户注册/登录、Token 签发验证、RBAC 权限管理、多设备登录管理
 │
 ├── SecurityService/                    # [子仓库] 加密安全服务 (Rust) 🔐
-│   └── 数据加密解密（AES-256-GCM/RSA-ECIES）、密钥管理、数字签名、mTLS 证书全生命周期管理
+│   └── 数据加密解密（AES-256-GCM/RSA-ECIES）、密钥管理、数字签名
+│
+├── CertService/                        # [子仓库] 证书分发服务 (C++) 🔐
+│   └── SSL/TLS 证书自动分发、自动续期、Nginx 配置生成、ACME 协议对接
 │
 ├── ArticleService/                     # [子仓库] 文章服务 (Go)
 │   └── 文章 CRUD、文章搜索、分类/标签管理，Go 高并发协程应对大量读写请求
@@ -175,12 +176,12 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── 全文检索、搜索排序评分、搜索建议、Elasticsearch 索引管理，C++ 保证毫秒级响应
 │
 ├── vue/                                # [子仓库] Vue 3 前端
-│   └── 用户端 Web 应用，Vue 3 + TypeScript，通过 gRPC-Web 与后端通信
+│   └── 用户端 Web 应用，Vue 3 + TypeScript，通过 HTTP/JSON 与网关通信
 │
 ├── mobile/                             # [子仓库] 移动端 App
 │   ├── ios/                            # iOS App (Swift) — 用户端，浏览文章/博客/图片/视频
 │   └── android/                        # Android App (Kotlin) — 用户端，浏览文章/博客/图片/视频
-│   └── 原生移动端应用，通过 gRPC 直接连接后端服务
+│   └── 原生移动端应用，通过 HTTP/JSON 连接后端服务
 │
 ├── assets/                             # [子仓库] 设计资源
 │   ├── designs/                        # UI 设计稿（Figma / Sketch）
@@ -200,71 +201,55 @@ WebServer/                              # 总仓库（Git 根仓库）
 ```
                     ┌──────────────────────┐    ┌───────────────────────┐    ┌──────────────────────┐
                     │      Vue 前端         │    │     iOS App (Swift)   │    │   Android App (Kotlin)│
-                    │   gRPC-Web / Nginx    │    │   gRPC 客户端          │    │   gRPC 客户端          │
+                    │   HTTP/JSON / Nginx   │    │   TCP + Protobuf      │    │   TCP + Protobuf      │
                     └──────────┬───────────┘    └───────────┬───────────┘    └───────────┬──────────┘
                                │                            │                            │
                                └────────────────────────────┼────────────────────────────┘
-                                                           │ gRPC
+                                                           │ TCP + Protobuf
                                                            ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                       AdminConsole — 内部管理面板 (C++)                  │
-│             管理网关 / 注册发现 / 配置中心 / 链路追踪 / 监控告警           │
-│                      Admin Web UI（独立 HTML 面板）                      │
-│                服务治理 · 系统监控 · 配置管理 · 健康检查                   │
-└──────────────────────────────┬───────────────────────────────────────────┘
-                               │ 通过 gRPC 调用各核心服务
-                               ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                        核心框架微服务（C++）                               │
-├──────────────┬───────────────┬──────────────┬──────────────────────────┤
-│ GRPCGateway  │ ServiceRegistry│ ConfigCenter │ TracingService          │
-│ 协议转换/路由  │ 注册发现/负载均衡│ 配置管理/热更新│ 链路追踪/性能分析       │
-├──────────────┴───────────────┴──────────────┴──────────────────────────┤
-│                           MonitorService                                │
-│                           监控指标/告警规则                               │
-└──────────────────────────────┬───────────────────────────────────────────┘
-                               │ 路由分发
-                               ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                    ServiceConsole — 业务管理面板 (C++)                   │
-│             管理用户 / 文章 / 博客 / 图片 / 视频 / 搜索                   │
-│                      Admin Web UI（独立 HTML 面板）                      │
-│                  业务数据管理 · 运营统计 · 内容审核                       │
-└──────────────────────────────┬───────────────────────────────────────────┘
-                               │ 通过 gRPC 调用各业务服务
-                               ▼
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                               业务微服务层                                            │
-├────────────────┬──────────────┬──────────────┬──────────────┬──────────────────────┤
-│   UserService  │   Article    │     Blog     │    Image     │       Video          │
-│    (Rust)      │    (Go)      │    (Go)      │    (C++)     │       (Go)           │
-│   :50052       │   :50053     │   :50054     │   :50055     │      :50056          │
-│  用户认证/Token │  文章CRUD/   │  博客/评论/   │  图片处理/   │   视频转码/流媒体     │
-│  权限/设备管理  │  分类/标签    │  点赞/推荐    │  缩略图/转换  │   FFmpeg 调度        │
-├────────────────┴──────────────┴──────────────┴──────────────┴──────────────────────┤
-│                                    │                                                │
-│                                    │  ┌────────────────────────────────────────────┐│
-│                                    │  │          SecurityService (Rust) 🔐          ││
-│                                    │  │           端口 :51057                       ││
-│                                    │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐   ││
-│                                    │  │  │ AES-256  │ │ Ed25519  │ │  mTLS    │   ││
-│                                    │  │  │ 加/解密  │ │ 数字签名 │ │ 证书管理  │   ││
-│                                    │  │  └──────────┘ └──────────┘ └──────────┘   ││
-│                                    │  └────────────────────────────────────────────┘│
-│                                    │                                                │
-│                                    ▼                                                │
-│                    ┌──────────────────────────────┐                                │
-│                    │       SearchService (C++)      │                              │
-│                    │        端口 :50057              │                              │
-│                    │  全文索引 / 搜索排序 / 搜索建议   │                              │
-│                    └──────────────┬─────────────────┘                              │
-│                                   │                                                │
-│                                   ▼                                                │
-│                    ┌──────────────────────────────┐                                │
-│                    │      Elasticsearch (搜索引擎)   │                               │
-│                    │         端口 :9200             │                               │
-│                    └──────────────────────────────┘                                │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    GRPCGateway — 网关 (C++)                                     │
+│                  协议转换 · 路由分发 · 限流熔断 · Token 鉴权 · **TLS termination**                │
+│                   证书来源：启动时调用 CertService.DistributeCert()                               │
+└────────────────────────────────────┬────────────────────────────────────────────────────────────┘
+                                     │ 路由分发
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                     核心框架微服务（C++）                                         │
+├───────────────┬──────────────┬──────────────┬──────────────────────────┬──────────────────────┤
+│ ServiceRegist.│ ConfigCenter │TracingService│   MonitorService         │   AdminConsole       │
+│ :51051        │ :51052       │ :51053       │   :51054                 │   :51055             │
+│ 注册发现       │ 配置管理     │ 链路追踪      │   监控告警                │   内部管理面板        │
+├───────────────┴──────────────┴──────────────┴──────────────────────────┴──────────────────────┤
+│                      所有核心服务启动时从 CertService 获取 mTLS 证书                          │
+└────────────────────────────────────┬────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   业务微服务层                                                     │
+├────────────────┬──────────────┬──────────────┬──────────────┬──────────────────────────────────┤
+│   UserService  │   Article    │     Blog     │    Image     │           Video                   │
+│    (Rust)      │    (Go)      │    (Go)      │    (C++)     │           (Go)                   │
+│   :50052       │   :50053     │   :50054     │   :50055     │          :50056                  │
+│  用户认证/Token │  文章CRUD/   │  博客/评论/   │  图片处理/   │       视频转码/流媒体             │
+│  权限/设备管理  │  分类/标签    │  点赞/推荐    │  缩略图/转换  │       FFmpeg 调度                │
+├────────────────┴──────────────┴──────────────┴──────────────┴──────────────────────────────────┤
+│                      所有业务服务启动时从 CertService 获取 mTLS 证书                          │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│               SearchService (C++ :50057)   ←→   Elasticsearch (:9200)                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ 所有服务在启动时和到期前 24h 调用：
+                                    │     CertService.DistributeCert(service_name)
+                                    │     → 返回 { certificate, private_key, ca_cert, expires_at }
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                          CertService — 证书分发服务 (C++ :51058) 🔐                              │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────────────────────────────┐  │
+│  │ SSL 证书自动分发  │  │ 自动续期/吊销    │  │ Nginx 配置生成                              │  │
+│  │ DistributeCert   │  │ RenewCert       │  │ 自动生成 nginx.conf + SSL 配置               │  │
+│  └──────────────────┘  └──────────────────┘  └──────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 核心框架组件（C++ 实现）
@@ -294,14 +279,15 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 | 微服务 | 语言 | 端口 | 职责 | 核心算法/协议 |
 |--------|------|------|------|-------------|
-| **SecurityService** | Rust | 51057 | 数据加密/解密、密钥管理、数字签名、mTLS 证书管理 | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
+| **SecurityService** | Rust | 51057 | 数据加密/解密、密钥管理、数字签名 | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
+| **CertService** | C++ | 51058 | SSL/TLS 证书自动分发、续期、Nginx 配置生成 | X.509 / ACME / Let's Encrypt |
 
 #### 端口规划说明
 
 | 端口范围 | 服务类型 | 说明 |
 |---------|---------|------|
 | 50051–50057 | 业务微服务 | 网关 + 6 个业务服务（User/Article/Blog/Image/Video/Search） |
-| 51051–51057 | 核心框架 + 安全 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService |
+| 51051–51058 | 核心框架 + 安全 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService + CertService |
 | 60907 | 前端 | Vue 3 开发服务器 |
 
 ---
@@ -323,7 +309,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | **优先级** | ✅ 核心 |
 | **代码仓库** | `GRPCGateway/` |
 
-GRPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换（HTTP↔gRPC）、路由分发、令牌桶限流、Token 鉴权。基于 C++ epoll 事件驱动，单机支撑数万并发，是微服务的第一道防线。
+GRPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换（HTTP↔Protobuf）、路由分发、令牌桶限流、Token 鉴权、**TLS termination**。基于 C++ epoll 事件驱动，单机支撑数万并发。TLS 证书由 CertService 独立分发，启动时调用 `DistributeCert` 获取。
 
 ---
 
@@ -390,7 +376,7 @@ MonitorService 是微服务架构的 **"体检中心"**。采集 CPU/内存/QPS/
 | **优先级** | ✅ 核心 |
 | **代码仓库** | `AdminConsole/` |
 
-AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治理（路由/限流/实例上下线）、系统监控（CPU/内存/QPS 仪表盘）、配置管理（可视化编辑+热更新）、链路追踪（TraceID 搜索+瀑布图）、告警管理（规则配置+处理记录）。独立 Web UI，gRPC 直连核心服务，操作全审计。
+AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治理（路由/限流/实例上下线）、系统监控（CPU/内存/QPS 仪表盘）、配置管理（可视化编辑+热更新）、链路追踪（TraceID 搜索+瀑布图）、告警管理（规则配置+处理记录）。独立 Web UI，Protobuf 直连核心服务，操作全审计。
 
 ---
 
@@ -403,11 +389,11 @@ AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治
 | **优先级** | ✅ 核心 |
 | **代码仓库** | `ServiceConsole/` |
 
-ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用户管理（角色权限/封禁解封）、内容审核（文章/博客/图片/视频审核队列）、运营统计（用户增长/内容产出/互动数据图表）。独立 Web UI，gRPC 直连业务微服务，操作同步审计日志。
+ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用户管理（角色权限/封禁解封）、内容审核（文章/博客/图片/视频审核队列）、运营统计（用户增长/内容产出/互动数据图表）。独立 Web UI，Protobuf 直连业务微服务，操作同步审计日志。
 
 ---
 
-### 🔐 安全层（Rust）
+### 🔐 安全层
 
 #### 🟥 SecurityService — 加密安全服务
 
@@ -418,7 +404,20 @@ ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用�
 | **优先级** | ✅ 核心 |
 | **代码仓库** | `SecurityService/` |
 
-SecurityService 是整个架构的**安全基石**，选择 Rust 保障内存安全。四大模块：**数据加密**（AES-256-GCM 对称 + RSA/ECIES 非对称）、**数字签名**（Ed25519/ECDSA，90 天密钥轮换）、**密钥管理**（全生命周期自动轮换，旧密钥保留 180 天）、**mTLS 证书**（内部 CA 签发 7 天短命证书，到期前 24h 自动续期）。
+SecurityService 是整个架构的**安全基石**，选择 Rust 保障内存安全。四大模块：**数据加密**（AES-256-GCM 对称 + RSA/ECIES 非对称）、**数字签名**（Ed25519/ECDSA，90 天密钥轮换）、**密钥管理**（全生命周期自动轮换，旧密钥保留 180 天）、**审计日志**。
+
+---
+
+#### 🟨 CertService — 证书分发服务
+
+| 属性 | 说明 |
+|------|------|
+| **语言** | C++17 |
+| **端口** | 51058 |
+| **优先级** | ✅ 核心 |
+| **代码仓库** | `CertService/` |
+
+CertService 是独立的 **SSL/TLS 证书分发微服务**，Proto 接口定义于 `proto/source/cert/cert_service.proto`。作为内部 CA 为 GRPCGateway 及所有微服务统一签发、续期、吊销 mTLS 证书，每个服务启动时独立调用 `DistributeCert` 获取。支持 ACME 协议对接 Let's Encrypt 自动获取公网证书，自动生成 Nginx SSL 配置文件和 `nginx.conf`。证书 7 天短生命周期，到期前 24h 自动续期，支持 CRL 吊销。
 
 ---
 
@@ -508,29 +507,29 @@ SearchService 是**搜索引擎上层封装**（C++ 实现）。C++ 层处理查
 
 | 属性 | 说明 |
 |------|------|
-| **技术栈** | Vue 3 + TypeScript + gRPC-Web |
+| **技术栈** | Vue 3 + TypeScript + HTTP/JSON |
 | **端口** | 60907 |
 | **代码仓库** | `vue/` |
 
-Vue 3 前端是用户端 Web 应用。Vue 3 + TypeScript 构建，通过 **gRPC-Web** 与网关通信，二进制 Protobuf 编码比 JSON 快 2~5 倍。proto 自动生成 TypeScript 类型，保证前后端接口一致性。提供文章/博客/图片/视频浏览和用户登录注册等完整体验。
+Vue 3 前端是用户端 Web 应用。Vue 3 + TypeScript 构建，通过 **HTTP/JSON** 与网关通信。protoc 编译生成 TypeScript 类型，保证前后端接口一致性。提供文章/博客/图片/视频浏览和用户登录注册等完整体验。
 
 #### iOS App（Swift）
 
 | 属性 | 说明 |
 |------|------|
-| **技术栈** | Swift + gRPC Swift |
+| **技术栈** | Swift + TCP/Protobuf |
 | **代码仓库** | `mobile/ios/` |
 
-iOS 原生 App 使用 Swift + SwiftUI 开发，gRPC Swift 客户端通过 proto 生成代码直接调用后端。核心页面：内容信息流、文章/博客详情、图片画廊、视频播放、用户中心。响应式 UI 跨设备适配。
+iOS 原生 App 使用 Swift + SwiftUI 开发，Protobuf 序列化通过 TCP 连接网关通信。核心页面：内容信息流、文章/博客详情、图片画廊、视频播放、用户中心。响应式 UI 跨设备适配。
 
 #### Android App（Kotlin）
 
 | 属性 | 说明 |
 |------|------|
-| **技术栈** | Kotlin + gRPC Kotlin |
+| **技术栈** | Kotlin + TCP/Protobuf |
 | **代码仓库** | `mobile/android/` |
 
-Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程客户端 + Kotlin Flow 响应式数据更新。功能覆盖与 iOS 一致，确保跨平台用户体验统一。两者均通过 SecurityService 加密敏感通信数据。
+Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化通过 TCP 连接网关通信。功能覆盖与 iOS 一致，确保跨平台用户体验统一。两者均通过 SecurityService 加密敏感通信数据。
 
 ---
 
@@ -538,12 +537,12 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程�
 
 ### GRPCGateway — 网关服务（C++，端口:50051）
 
-对外统一入口，负责 HTTP/gRPC 协议转换、路由分发、限流控制、鉴权验证。
+对外统一入口，负责 HTTP/Protobuf 协议转换、路由分发、限流控制、鉴权验证。
 
 | RPC | 请求 | 响应 | 说明 |
 |-----|------|------|------|
 | `RouteRequest` | service_name, method_name, payload, metadata | status_code, data, error_message | 路由请求到后端微服务 |
-| `HttpToGrpc` | method, path, headers, body, query_params | status_code, headers, body | HTTP 协议转 gRPC |
+| `HttpToRpc` | method, path, headers, body, query_params | status_code, headers, body | HTTP 协议转 RPC |
 | `RateLimit` | client_ip, api_path, request_count | allowed, remaining_quota, reset_time_seconds | 限流控制 |
 | `Authenticate` | token, service_name, method_name | authenticated, user_id, permissions | 鉴权验证 |
 
@@ -603,9 +602,9 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程�
 
 ## 🔐 SecurityService — 加密安全服务（Rust，端口:51057）
 
-全链路安全微服务，提供敏感数据端到端加密、密钥生命周期管理、数字签名验签、服务间 mTLS 双向认证管理。
+全链路安全微服务，提供敏感数据端到端加密、密钥生命周期管理、数字签名验签。
 
-> **为什么用 Rust？** 安全服务是所有微服务中最不能出内存安全问题的环节。Rust 的所有权系统和零成本抽象保证了加密算法的高性能执行，同时彻底杜绝了缓冲区溢出、空指针解引用等内存安全漏洞。对比 C++，Rust 的 trait 系统让加密算法的组合更安全、更可预测。
+> **为什么用 Rust？** 安全服务是所有微服务中最不能出内存安全问题的环节。Rust 的所有权系统和零成本抽象保证了加密算法的高性能执行，同时彻底杜绝了缓冲区溢出、空指针解引用等内存安全漏洞。
 
 ### 数据加密 — 保护业务敏感数据
 
@@ -637,20 +636,6 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程�
 - 签名密钥：每 90 天自动轮换
 - 密钥版本化：旧密钥保留 180 天用于解密历史数据
 
-### mTLS 证书管理 — 服务间双向认证
-
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `GetCertificate` | service_name | certificate, private_key, ca_cert, expires_at | 获取 mTLS 证书（含 CA 证书链） |
-| `RenewCertificate` | service_name | certificate, private_key, ca_cert, expires_at | 续期 mTLS 证书（到期前自动触发） |
-| `ValidateCertificate` | certificate, service_name | valid, san, expires_at, issuer | 验证证书有效性（检查 SAN、有效期、CA 签名） |
-
-**证书管理机制**：
-- 内部 CA 签发，所有微服务信任同一根 CA
-- 证书有效期：7 天（短生命周期减少泄露风险）
-- 自动续期：到期前 24 小时自动发起续期请求
-- 吊销支持：紧急情况下可吊销任意服务证书
-
 ### 加密层级设计（纵深防御模型）
 
 ```
@@ -661,12 +646,12 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程�
 │  │  适用场景：用户手机号、身份证、银行卡、医疗记录等 PII 数据      │   │
 │  │  加密方式：AES-256-GCM，每次加密生成随机 IV                   │   │
 │  │  密钥策略：每 30 天自动轮换，旧密钥保留 180 天用于解密          │   │
-│  │  调用方式：业务服务通过 gRPC 调用 SecurityService.Encrypt()    │   │
+│   │  调用方式：业务服务通过 RPC 调用 SecurityService.Encrypt()    │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────────┤
 │  第二层：传输层 — 服务间 mTLS 双向认证                             │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  适用场景：所有微服务间的 gRPC 通信                           │   │
+│   │  适用场景：所有微服务间的 RPC 通信                           │   │
 │  │  认证方式：双向 TLS，客户端和服务端都需要出示证书               │   │
 │  │  证书周期：7 天自动轮换，CA 统一签发                          │   │
 │  │  加密套件：TLS 1.3 + X25519 + AES-256-GCM                   │   │
@@ -792,14 +777,8 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，gRPC Kotlin 协程�
 | C++ 编译器 | C++17（GCC 8+ / MSVC 2019+） | 核心框架编译 |
 | CMake | 3.10+ | C++ 构建系统 |
 | MySQL | 8.0+ | 数据库 |
-| gRPC | 1.40+ | 微服务通信框架 |
-| Protobuf | 3.15+ | 序列化协议 |
-| protoc-gen-go-grpc | 1.2+ | Go gRPC 代码生成插件 |
-| protoc-gen-tonic | 0.3+ | Rust gRPC 代码生成插件 |
-| protoc-gen-grpc-swift | 1.0+ | Swift gRPC 代码生成插件 |
-| protoc-gen-grpc-kotlin | 1.3+ | Kotlin gRPC 代码生成插件 |
-| protoc-gen-grpc-web | 1.4+ | JavaScript gRPC-Web 代码生成插件 |
-| Rust | 1.70+ | UserService（安全敏感认证服务）、SecurityService（加密安全服务，依赖 `ring`/`rustls`/`tonic` 等加密库） |
+| Protobuf | 3.15+ | 序列化协议（protoc 编译器） |
+| Rust | 1.70+ | UserService（安全敏感认证服务）、SecurityService（加密安全服务） |
 | Go | 1.21+ | ArticleService、BlogService、VideoService（I/O 密集型服务） |
 | Node.js | 18+ | 前端构建 |
 
@@ -814,28 +793,33 @@ git submodule update --init --recursive
 ### 2️⃣ 检查前置工具
 
 ```bash
-# 检查 protoc 及各语言插件是否安装
-protoc --version                                                     # 需要 3.15+
-which grpc_cpp_plugin                                               # C++ gRPC 插件
-protoc-gen-go-grpc --version || echo "需要安装 protoc-gen-go-grpc"   # Go 插件
-protoc-gen-tonic --version || echo "需要安装 protoc-gen-tonic"      # Rust 插件
-protoc-gen-grpc-web --version || echo "需要安装 protoc-gen-grpc-web" # JS 插件
+# 检查 protoc 是否安装
+protoc --version    # 需要 3.15+
 
-# 检查 Rust 工具链（SecurityService 需要）
-rustc --version                                  # 需要 1.70+
-cargo install --list | grep protoc-gen-tonic    # Rust protoc 插件
-cargo install --list | grep ring                 # 加密库（AES-256-GCM 等）
+# 检查 C++ 编译器
+g++ --version       # 需要 C++17
+
+# 检查 Rust 工具链（UserService / SecurityService 需要）
+rustc --version     # 需要 1.70+
+
+# 检查 Go 工具链（ArticleService / BlogService / VideoService 需要）
+go version          # 需要 1.21+
+
+# 检查 Node.js（Vue 前端构建需要）
+node --version      # 需要 18+
 ```
 
 ### 2️⃣ 编译 Proto 库（生成多语言代码）
 
 #### 什么是 Proto 驱动开发？
 
-本项目所有微服务之间的通信接口，**全部由 `.proto` 文件统一定义**，然后通过 `protoc` 编译器生成各语言的 gRPC 骨架代码。这种方式的好处是：
+本项目所有微服务之间的通信接口，**全部由 `.proto` 文件统一定义**，然后通过 `protoc` 编译器生成多语言的 Protobuf 序列化代码。服务间通信使用自定义 TCP 帧协议（4 字节长度前缀 + Protobuf 二进制数据）。
 
-1. **接口即契约** — 一个 `.proto` 文件同时约束 6 种语言，保证接口完全一致
+这种方式的好处是：
+
+1. **接口即契约** — 一个 `.proto` 文件同时约束多语言，保证接口完全一致
 2. **类型安全** — 编译时检查类型，避免运行时序列化错误
-3. **零运行时开销** — gRPC 使用 Protobuf 二进制序列化，比 JSON 快 10-100 倍
+3. **零运行时开销** — Protobuf 二进制序列化，比 JSON 快 10-100 倍
 4. **多语言原生支持** — 每种语言生成对应风格的代码（C++ 类、Go struct、Rust struct 等）
 
 #### 目录结构说明
@@ -846,7 +830,7 @@ proto/
 │   ├── common/                      # 公共类型、枚举、错误码
 │   │   └── common.proto            # RequestId、Pagination、ErrorCode
 │   ├── gateway/                     # 网关服务接口
-│   │   └── gateway.proto           # RouteRequest、HttpToGrpc、RateLimit
+│   │   └── gateway.proto           # RouteRequest、HttpToRpc、RateLimit
 │   ├── registry/                    # 服务注册发现接口
 │   │   └── registry.proto          # Register、Discover、Watch
 │   ├── config/                      # 配置中心接口
@@ -861,17 +845,14 @@ proto/
 │   ├── search/                      # 搜索服务接口
 │   ├── tracing/                     # 链路追踪接口
 │   ├── monitor/                     # 监控告警接口
-│   ├── frontend/                    # 前端服务接口（gRPC-Web）
+│   ├── frontend/                    # 前端服务接口
 │   ├── admin_console/               # 内部管理面板接口
 │   └── service_console/             # 业务管理面板接口
 └── build/                           # 编译输出
     └── generated/
         ├── cpp/                     # C++ 生成代码
         ├── go/                      # Go 生成代码
-        ├── rust/                    # Rust 生成代码
-        ├── swift/                   # Swift 生成代码
-        ├── kotlin/                  # Kotlin 生成代码
-        └── js/                      # JavaScript 生成代码（gRPC-Web）
+        └── rust/                    # Rust 生成代码
 ```
 
 #### 生成 C++ 代码（核心框架）
@@ -879,65 +860,26 @@ proto/
 ```bash
 cd proto/source && mkdir -p ../build && cd ../build
 cmake ../source && make -j$(nproc)
+echo "✅ C++ Protobuf 代码生成完成"
 ```
 
-#### 生成各语言 gRPC 代码
-
-每种语言需使用对应的 protoc 插件编译 `.proto` 文件到各自的代码目录：
-
-| 目标语言 | protoc 插件 | 安装命令 | 输出目录 | 使用者 |
-|---------|------------|---------|---------|-------|
-| **C++** | `protoc` 内置 grpc_cpp_plugin | `apt install protobuf-compiler-grpc` | `build/generated/cpp/` | GRPCGateway、ServiceRegistry、ConfigCenter、TracingService、MonitorService、AdminConsole、ServiceConsole、ImageService、SearchService |
-| **Go** | `protoc-gen-go-grpc` | `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest` | `build/generated/go/` | ArticleService、BlogService、VideoService |
-| **Rust** | `protoc-gen-tonic` | `cargo install protoc-gen-tonic` | `build/generated/rust/` | UserService、SecurityService 🔐 |
-| **Swift** | `protoc-gen-grpc-swift` | `brew install grpc-swift` | `build/generated/swift/` | iOS App |
-| **Kotlin** | `protoc-gen-grpc-kotlin` | 使用 Gradle plugin `com.google.protobuf` | `build/generated/kotlin/` | Android App |
-| **JavaScript** | `protoc-gen-grpc-web` | `npm install -g protoc-gen-grpc-web` | `build/generated/js/` | Vue 前端（gRPC-Web） |
-
-一键生成所有语言代码示例：
+#### 生成 Go 代码（业务服务）
 
 ```bash
-cd proto
-PROTO_DIR=source
-OUT_DIR=build/generated
-
-# 查找所有 .proto 文件
-PROTO_FILES=$(find $PROTO_DIR -name "*.proto")
-
-# ─── C++ ─────────────────────────────────────
-protoc --cpp_out=$OUT_DIR/cpp --grpc_out=$OUT_DIR/cpp \
-  --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ C++ 代码生成完成"
-
-# ─── Go ───────────────────────────────────────
-protoc --go_out=$OUT_DIR/go --go-grpc_out=$OUT_DIR/go \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ Go 代码生成完成"
-
-# ─── Rust ─────────────────────────────────────
-protoc --rust_out=$OUT_DIR/rust --tonic_out=$OUT_DIR/rust \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ Rust 代码生成完成"
-
-# ─── Swift ────────────────────────────────────
-protoc --swift_out=$OUT_DIR/swift --grpc-swift_out=$OUT_DIR/swift \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ Swift 代码生成完成"
-
-# ─── Kotlin ───────────────────────────────────
-protoc --kotlin_out=$OUT_DIR/kotlin --grpc-kotlin_out=$OUT_DIR/kotlin \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ Kotlin 代码生成完成"
-
-# ─── JavaScript (gRPC-Web) ────────────────────
-protoc --js_out=import_style=commonjs:$OUT_DIR/js \
-  --grpc-web_out=import_style=commonjs,mode=grpcwebtext:$OUT_DIR/js \
-  -I $PROTO_DIR $PROTO_FILES
-echo "✅ JavaScript 代码生成完成"
+protoc --go_out=../build/generated/go \
+  -I ../source $(find ../source -name "*.proto")
+echo "✅ Go Protobuf 代码生成完成"
 ```
 
-> **注意**：生成代码通常不提交到 Git 仓库，而是在 CI/CD 构建流程中自动生成，或通过 `git submodule` 方式在各微服务仓库中独立编译。
+#### 生成 Rust 代码（安全服务）
+
+```bash
+protoc --rust_out=../build/generated/rust \
+  -I ../source $(find ../source -name "*.proto")
+echo "✅ Rust Protobuf 代码生成完成"
+```
+
+> **注意**：protoc 只生成序列化代码（.pb.h / .pb.go / .rs），不生成 RPC 通信骨架。服务间通信的 RPC 框架由各服务自行实现 TCP 帧协议 + 方法路由。
 
 #### security.proto 示例（SecurityService 接口定义片段）
 
@@ -946,7 +888,7 @@ syntax = "proto3";
 package security;
 option go_package = "proto/build/generated/go/security";
 
-// 加密安全服务 — 全链路加密、密钥管理、数字签名、mTLS 证书
+// 加密安全服务 — 全链路加密、密钥管理、数字签名
 service SecurityService {
   // ── 数据加密 ──
   rpc Encrypt(EncryptRequest) returns (EncryptResponse);
@@ -961,11 +903,6 @@ service SecurityService {
   // ── 密钥管理 ──
   rpc GenerateKey(GenerateKeyRequest) returns (GenerateKeyResponse);
   rpc RotateKey(RotateKeyRequest) returns (RotateKeyResponse);
-
-  // ── 证书管理 ──
-  rpc GetCertificate(GetCertificateRequest) returns (GetCertificateResponse);
-  rpc RenewCertificate(RenewCertificateRequest) returns (RenewCertificateResponse);
-  rpc ValidateCertificate(ValidateCertificateRequest) returns (ValidateCertificateResponse);
 
   // ── 哈希与消息认证 ──
   rpc HashData(HashDataRequest) returns (HashDataResponse);
@@ -1070,6 +1007,7 @@ cd vue && npm install && npm run dev
 | AdminConsole | C++ | 51055 | 核心框架 | 管理面板层 |
 | ServiceConsole | C++ | 51056 | 核心框架 | 管理面板层 |
 | SecurityService | Rust | 51057 | 安全服务 🔐 | 安全层 |
+| CertService | C++ | 51058 | 证书服务 🔐 | 安全层 |
 | UserService | Rust | 50052 | 业务服务 | 业务层 |
 | ArticleService | Go | 50053 | 业务服务 | 业务层 |
 | BlogService | Go | 50054 | 业务服务 | 业务层 |
@@ -1078,6 +1016,8 @@ cd vue && npm install && npm run dev
 | SearchService | C++ | 50057 | 业务服务 | 业务层 |
 | Vue 前端 | JS | 60907 | 前端 | 前端层 |
 | Elasticsearch | Java | 9200 | 搜索引擎 | 数据层 |
+
+---
 
 ---
 
@@ -1099,10 +1039,9 @@ cd vue && npm install && npm run dev
 - [x] **security/** 目录规划 — 加密安全服务接口（新增）
 
 #### Proto 多语言编译 ✅ 已完成
-- [x] CMake 构建脚本 — 编译 C++ gRPC 代码
-- [ ] protoc 编译命令 — 支持 C++ / Go / Rust / Swift / Kotlin / JS 六种语言
-- [x] 各语言 protoc 插件安装说明（protoc-gen-go-grpc / protoc-gen-tonic / protoc-gen-grpc-swift / protoc-gen-grpc-kotlin / protoc-gen-grpc-web）
-- [x] 一键编译脚本模板
+- [x] CMake 构建脚本 — 编译 C++ Protobuf 代码
+- [x] protoc 编译命令 — 支持 C++ / Go / Rust 三种语言
+- [x] 各语言 protoc 编译说明（--cpp_out / --go_out / --rust_out）
 
 #### AdminConsole 内部管理面板 (C++)
 - [ ] **Admin Web UI 前端** — 独立 HTML + JS 管理面板
@@ -1142,7 +1081,6 @@ cd vue && npm install && npm run dev
   - [ ] AsymmetricEncrypt/AsymmetricDecrypt — RSA-OAEP/ECIES 非对称加密接口
   - [ ] Sign/Verify — Ed25519/ECDSA 数字签名接口
   - [ ] GenerateKey/RotateKey — 密钥管理接口
-  - [ ] GetCertificate/RenewCertificate/ValidateCertificate — mTLS 证书管理接口
   - [ ] HashData/Hmac — 哈希与消息认证码接口
 - [ ] **加密实现**
   - [ ] AES-256-GCM 对称加密模块（使用 Rust `ring` 库）
@@ -1165,6 +1103,24 @@ cd vue && npm install && npm run dev
   - [ ] 对接 AdminConsole — 密钥管理面板、证书状态查看
   - [ ] 对接 ServiceRegistry — 安全服务注册发现
   - [ ] 所有业务服务集成 SecurityService 客户端 SDK
+
+#### CertService 证书分发服务 (C++ 🔐)
+- [ ] **Proto 接口定义** — 定义 cert_service.proto
+  - [ ] DistributeCert — SSL 证书分发接口
+- [ ] **证书管理实现**
+  - [ ] 内部 CA 根证书生成
+  - [ ] 服务证书签发（7 天有效期）
+  - [ ] 自动续期调度器（到期前 24 小时自动续期）
+  - [ ] 证书吊销列表（CRL）管理
+  - [ ] ACME 协议对接 Let's Encrypt
+- [ ] **Nginx 集成**
+  - [ ] 自动生成 nginx.conf 文件
+  - [ ] SSL 配置模板管理
+  - [ ] 热重载 Nginx 配置
+- [ ] **集成对接**
+  - [ ] 对接 GRPCGateway — TLS 证书分发
+  - [ ] 对接 AdminConsole — 证书状态查看、手动续期
+  - [ ] 对接 ServiceRegistry — 证书服务注册发现
 
 #### 业务微服务
 - [ ] **UserService**（Rust — 安全敏感，内存安全优势）
@@ -1197,17 +1153,17 @@ cd vue && npm install && npm run dev
   - [ ] 索引管理（重建/同步）
 
 #### 前端 & 移动端
-- [ ] **Vue 前端** gRPC-Web 接入
+- [ ] **Vue 前端** HTTP/JSON 接入
   - [ ] 文章浏览/搜索页面
   - [ ] 博客/评论互动页面
   - [ ] 图片/视频展示页面
   - [ ] 用户登录/注册页面
 - [ ] **iOS App**（Swift）
-  - [ ] gRPC 客户端集成
+  - [ ] TCP/Protobuf 客户端集成
   - [ ] 文章/博客/图片/视频浏览
   - [ ] 用户登录/注册
 - [ ] **Android App**（Kotlin）
-  - [ ] gRPC 客户端集成
+  - [ ] TCP/Protobuf 客户端集成
   - [ ] 文章/博客/图片/视频浏览
   - [ ] 用户登录/注册
 - [ ] **UI/UX 设计** — 全平台设计资源
@@ -1249,8 +1205,8 @@ cd vue && npm install && npm run dev
 - [ ] 性能优化（加密操作 < 1ms p99）
 
 #### 传输层安全全面加固
-- [ ] 所有服务间 gRPC 通信启用 mTLS 双向认证
-- [ ] 证书自动轮换（CA + ACME 协议集成）
+- [ ] 所有服务间 RPC 通信启用 mTLS 双向认证
+- [ ] 证书自动轮换（CertService CA + ACME 协议集成）
 - [ ] 网关统一 TLS termination（支持 TLS 1.3 仅）
 - [ ] 证书监控与过期预警
 
