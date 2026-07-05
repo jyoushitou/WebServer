@@ -859,27 +859,75 @@ proto/
 
 ```bash
 cd proto/source && mkdir -p ../build && cd ../build
-cmake ../source && make -j$(nproc)
+cmake ../source && cmake --build .
 echo "✅ C++ Protobuf 代码生成完成"
+# 生成位置：proto/build/generated/cpp/
 ```
 
 #### 生成 Go 代码（业务服务）
 
 ```bash
+# 先安装 protoc 的 Go 插件
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+# 编译 Go 的 Protobuf 序列化代码
 protoc --go_out=../build/generated/go \
   -I ../source $(find ../source -name "*.proto")
 echo "✅ Go Protobuf 代码生成完成"
+# 生成位置：proto/build/generated/go/
 ```
 
 #### 生成 Rust 代码（安全服务）
 
 ```bash
-protoc --rust_out=../build/generated/rust \
+# 先安装 protoc 的 Rust 插件
+cargo install protoc-gen-prost
+
+# 编译 Rust 的 Protobuf 序列化代码
+protoc --prost_out=../build/generated/rust \
   -I ../source $(find ../source -name "*.proto")
 echo "✅ Rust Protobuf 代码生成完成"
+# 生成位置：proto/build/generated/rust/
 ```
 
-> **注意**：protoc 只生成序列化代码（.pb.h / .pb.go / .rs），不生成 RPC 通信骨架。服务间通信的 RPC 框架由各服务自行实现 TCP 帧协议 + 方法路由。
+#### 一键生成所有语言代码
+
+```bash
+cd proto
+
+# 配置：源码目录
+PROTO_DIR=source
+OUT_DIR=build/generated
+mkdir -p $OUT_DIR/cpp $OUT_DIR/go $OUT_DIR/rust
+
+# 查找所有 .proto 文件
+PROTO_FILES=$(find $PROTO_DIR -name "*.proto")
+
+echo "🚀 开始编译所有 .proto 文件..."
+
+# ─── C++ ───────────────────────────────
+protoc --cpp_out=$OUT_DIR/cpp \
+  -I $PROTO_DIR $PROTO_FILES
+echo "  ✅ C++    → $OUT_DIR/cpp/"
+
+# ─── Go ─────────────────────────────────
+protoc --go_out=$OUT_DIR/go \
+  -I $PROTO_DIR $PROTO_FILES
+echo "  ✅ Go     → $OUT_DIR/go/"
+
+# ─── Rust ───────────────────────────────
+protoc --prost_out=$OUT_DIR/rust \
+  -I $PROTO_DIR $PROTO_FILES
+echo "  ✅ Rust   → $OUT_DIR/rust/"
+
+echo "🎉 所有语言代码生成完成！"
+```
+
+> **注意**：
+> - protoc 只生成序列化代码（`.pb.h` / `.pb.go` / `.rs`），**不生成 RPC 通信骨架**
+> - 服务间通信的 RPC 框架由各服务自行实现 TCP 帧协议 + 方法路由
+> - 生成代码通常不提交到 Git 仓库，而是在 CI/CD 构建流程中自动生成
+> - Go 和 Rust 的 protoc 插件首次使用前需要手动安装（见上方命令）
 
 #### security.proto 示例（SecurityService 接口定义片段）
 
