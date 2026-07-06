@@ -184,6 +184,9 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── android/                        # Android App (Kotlin) — 用户端，浏览文章/博客/图片/视频
 │   └── 原生移动端应用，通过 HTTP/JSON 连接后端服务
 │
+├── desktop/                            # [子仓库] Qt 桌面端 App (C++)
+│   └── Qt 6 + C++17 高性能桌面客户端，TCP/Protobuf 直连网关，支持 Windows/macOS/Linux
+│
 ├── assets/                             # [子仓库] 设计资源
 │   ├── designs/                        # UI 设计稿（Figma / Sketch）
 │   ├── icons/                          # 图标库
@@ -206,12 +209,12 @@ WebServer/                              # 总仓库（Git 根仓库）
 ### 完整架构图
 
 ```
-                    ┌──────────────────────┐    ┌───────────────────────┐    ┌──────────────────────┐
-                    │      Vue 前端         │    │     iOS App (Swift)   │    │   Android App (Kotlin)│
-                    │   HTTP/JSON / Nginx   │    │   TCP + Protobuf      │    │   TCP + Protobuf      │
-                    └──────────┬───────────┘    └───────────┬───────────┘    └───────────┬──────────┘
-                               │                            │                            │
-                               └────────────────────────────┼────────────────────────────┘
+                    ┌──────────────────────┐    ┌───────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+                    │      Vue 前端         │    │     iOS App (Swift)   │    │   Android App (Kotlin)│    │  Qt Desktop App (C++)
+                    │   HTTP/JSON / Nginx   │    │   TCP + Protobuf      │    │   TCP + Protobuf      │    │   TCP + Protobuf      │
+                    └──────────┬───────────┘    └───────────┬───────────┘    └───────────┬──────────┘    └───────────┬──────────┘
+                               │                            │                            │                            │
+                               └────────────────────────────┼────────────────────────────┼────────────────────────────┘
                                                            │ TCP + Protobuf
                                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -1219,21 +1222,139 @@ cd vue && npm install && npm run dev
   - [ ] 索引管理（重建/同步）
 
 #### 前端 & 移动端
+
+##### 阶段一：Vue 3 Web 前端（进行中）
 - [ ] **Vue 前端** HTTP/JSON 接入
   - [ ] 文章浏览/搜索页面
   - [ ] 博客/评论互动页面
   - [ ] 图片/视频展示页面
   - [ ] 用户登录/注册页面
+  - [ ] **技术栈**：Vue 3 + TypeScript + Pinia 状态管理 + Vue Router
+  - [ ] **性能优化**
+    - [ ] 组件懒加载（Vue Router 动态导入）
+    - [ ] 图片懒加载（Intersection Observer）
+    - [ ] 虚拟滚动（长列表优化）
+    - [ ] 服务端渲染（SSR）支持（Nuxt 3 迁移规划）
+  - [ ] **UI/UX**
+    - [ ] 响应式布局（移动端/平板/桌面自适应）
+    - [ ] 深色模式支持
+    - [ ] 动画过渡（Vue Transition + GSAP）
+    - [ ] 骨架屏加载状态
+  - [ ] **安全集成**
+    - [ ] Token 自动刷新（Axios 拦截器）
+    - [ ] XSS 防护（DOMPurify 富文本过滤）
+    - [ ] CSRF Token 保护
+  - [ ] **打包分发**
+    - [ ] Docker 容器化部署（Nginx + 多阶段构建）
+    - [ ] CDN 静态资源分发
+    - [ ] PWA 离线支持（Service Worker）
+    - [ ] 自动化构建（GitHub Actions + Vercel/Netlify）
+
+##### 阶段二：移动端原生 App（规划中）
 - [ ] **iOS App**（Swift）
   - [ ] TCP/Protobuf 客户端集成
   - [ ] 文章/博客/图片/视频浏览
   - [ ] 用户登录/注册
+  - [ ] **技术栈**：Swift + SwiftUI + Combine
+  - [ ] **核心特性**
+    - [ ] 原生性能（Metal 渲染加速）
+    - [ ] 离线缓存（Core Data + 磁盘缓存）
+    - [ ] 推送通知（APNs）
+    - [ ] Widget 小组件（iOS 14+）
+    - [ ] 深色模式 + 动态字体
+  - [ ] **安全集成**
+    - [ ] mTLS 双向认证连接网关
+    - [ ] 本地敏感数据加密（Keychain + AES-256-GCM）
+    - [ ] 生物识别解锁（Face ID / Touch ID）
+    - [ ] App Attest 安全验证
+  - [ ] **打包分发**
+    - [ ] App Store Connect 发布
+    - [ ] TestFlight 内测分发
+    - [ ] 代码混淆（Swift Obfuscator）
+    - [ ] 签名证书管理（Apple Developer Program）
+
 - [ ] **Android App**（Kotlin）
-  - [ ] TCP/Protobuf 客户端集成
-  - [ ] 文章/博客/图片/视频浏览
-  - [ ] 用户登录/注册
-- [ ] **UI/UX 设计** — 全平台设计资源
-  - [ ] Figma 设计稿（Vue 前端 / Mobile App）
+  - [ ] **技术选型**：Kotlin + Jetpack Compose + TCP/Protobuf 直连网关
+  - [ ] **核心页面**
+    - [ ] 内容信息流 — 文章/博客/图片/视频聚合浏览
+    - [ ] 文章/博客详情页 — 富文本渲染、评论互动
+    - [ ] 图片画廊 — 基于 Coil 的高性能图片加载、缩放、分享
+    - [ ] 视频播放器 — 基于 ExoPlayer 的流媒体播放、倍速、画中画
+    - [ ] 用户中心 — 个人资料、收藏、历史记录、设置
+  - [ ] **高性能特性**
+    - [ ] 异步网络 I/O（OkHttp + Protobuf 序列化）
+    - [ ] 本地缓存（Room 离线数据 + Coil 图片磁盘缓存）
+    - [ ] 协程并发请求（Kotlin Coroutines + Flow 响应式数据流）
+    - [ ] 分页加载（Paging 3 库实现无限滚动）
+  - [ ] **安全集成**
+    - [ ] mTLS 双向认证连接网关
+    - [ ] 本地敏感数据加密存储（EncryptedSharedPreferences + AES-256-GCM）
+    - [ ] 生物识别解锁（Biometric Prompt 指纹/面部识别）
+    - [ ] 安全启动验证（App Integrity API 校验）
+  - [ ] **UI/UX 设计**
+    - [ ] Material 3 设计语言（Material You 动态主题）
+    - [ ] 深色模式支持
+    - [ ] 响应式布局（手机/平板自适应）
+    - [ ] 动画过渡（Jetpack Compose 动画系统）
+  - [ ] **跨版本兼容**
+    - [ ] 最低支持 Android 8.0 (API 26)
+    - [ ] 目标 SDK Android 14 (API 34)
+    - [ ] 兼容平板、折叠屏设备
+  - [ ] **打包分发**
+    - [ ] AAB (Android App Bundle) 发布 Google Play
+    - [ ] APK 侧载分发
+    - [ ] ProGuard/R8 代码混淆
+    - [ ] 签名证书管理（Google Play App Signing）
+
+##### 阶段三：Qt Desktop App（已完成 ✅）
+- [ ] **Qt Desktop App**（C++ — 高性能桌面客户端）✅ 已完成
+  - [ ] **技术选型**：Qt 6 + C++17 + TCP/Protobuf 直连网关
+  - [ ] **核心页面**
+    - [ ] 内容信息流 — 文章/博客/图片/视频聚合浏览
+    - [ ] 文章/博客详情页 — 富文本渲染、评论互动
+    - [ ] 图片画廊 — 高性能图片加载、缩放、旋转
+    - [ ] 视频播放器 — 基于 Qt Multimedia 的本地/流媒体播放
+    - [ ] 用户中心 — 个人资料、收藏、历史记录
+  - [ ] **高性能特性**
+    - [ ] 硬件加速渲染（OpenGL/Vulkan 后端）
+    - [ ] 异步网络 I/O（Qt Network + Protobuf 序列化）
+    - [ ] 本地缓存（SQLite 离线数据 + 图片/视频磁盘缓存）
+    - [ ] 多线程并行加载（QThreadPool 并发请求）
+  - [ ] **安全集成**
+    - [ ] mTLS 双向认证连接网关
+    - [ ] 本地敏感数据加密存储（AES-256-GCM）
+    - [ ] 安全启动验证（数字签名校验可执行文件完整性）
+  - [ ] **跨平台支持**
+    - [ ] Windows（MSVC 2022 + Qt 6）
+    - [ ] macOS（Clang + Qt 6）
+    - [ ] Linux（GCC + Qt 6）
+  - [ ] **打包分发**
+      - [ ] Windows — NSIS / WiX 安装包
+      - [ ] macOS — DMG 磁盘映像 + 公证
+      - [ ] Linux — AppImage / Snap / Flatpak
+    - [ ] **独立可执行文件分发（Standalone Executable）**
+      - [ ] **Windows x86_64**
+        - [ ] 静态链接 Qt 6 运行时库，生成单个 `.exe` 文件
+        - [ ] 使用 UPX 压缩减小体积
+        - [ ] 数字签名（Authenticode 签名证书）
+        - [ ] 自动更新机制（增量更新 + 全量回退）
+      - [ ] **Linux x86_64**
+        - [ ] AppImage 格式 — 单文件分发，兼容所有主流发行版
+        - [ ] Flatpak — Flathub 商店分发，沙箱隔离
+        - [ ] Snap — Snapcraft 商店分发，自动更新
+        - [ ] 静态链接依赖（减少运行时库冲突）
+      - [ ] **macOS (Apple Silicon + Intel)**
+        - [ ] 通用二进制（Universal Binary），同时支持 arm64 和 x86_64
+        - [ ] DMG 磁盘映像 + 公证（Notarization）
+        - [ ] Mac App Store 分发（Sandbox 适配）
+        - [ ] Sparkle 自动更新框架集成
+      - [ ] **跨平台构建流水线**
+        - [ ] GitHub Actions 多平台并行构建（Windows/macOS/Linux）
+        - [ ] 构建产物自动签名 + 打包 + 上传 Release
+        - [ ] 版本号自动管理（语义化版本 + Git tag）
+        - [ ] 构建产物完整性校验（SHA256 校验和）
+    - [ ] **UI/UX 设计** — 全平台设计资源
+  - [ ] Figma 设计稿（Vue 前端 / Mobile App / Qt Desktop）
   - [ ] 图标库 & Logo 设计
   - [ ] 产品原型 & 交互稿
 
