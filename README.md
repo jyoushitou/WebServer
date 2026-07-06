@@ -1,6 +1,6 @@
-# WebServer - C++ RPC 微服务框架
+# WebServer - C++ HTTP/2 RPC 微服务框架
 
-> **从零实现的 C++ HTTP 服务器 → RPC 微服务架构演进**
+> **从零实现的 C++ HTTP 服务器 → HTTP/2 RPC 微服务架构演进**
 >
 > 用最底层的方式理解 Web 工作原理，用微服务架构承载业务扩展
 
@@ -39,7 +39,7 @@
   手写 RPC 框架 + 独立 Proto 仓库 + 服务拆分
   │
   ├── 核心框架（C++ 实现）
-  │   ├── GRPCGateway         — 对外统一入口，协议转换/路由分发/限流/鉴权
+  │   ├── RPCGateway         — 对外统一入口，协议转换/路由分发/限流/鉴权
   │   ├── ServiceRegistry     — 服务注册发现，动态路由/负载均衡/健康检查
   │   ├── ConfigCenter        — 配置中心，统一配置管理/热更新/版本控制
   │   ├── TracingService      — 链路追踪，请求全链路跟踪/性能分析/故障排查
@@ -136,7 +136,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 ├── ServiceConsole/                     # [子仓库] 业务服务管理面板 (C++) ✅ 核心
 │   └── 统一管理业务数据（用户/文章/博客/图片/视频/搜索）的独立 Web 控制台
 │
-├── GRPCGateway/                        # [子仓库] 网关 (C++) ✅ 核心
+├── RPCGateway/                        # [子仓库] 网关 (C++) ✅ 核心
 │   └── 对外统一入口，HTTP/Protobuf 协议转换、路由分发、限流熔断、身份鉴权
 │
 ├── ServiceRegistry/                    # [子仓库] 服务注册发现 (C++) ✅ 核心
@@ -208,7 +208,7 @@ WebServer/                              # 总仓库（Git 根仓库）
                                                            │ TCP + Protobuf
                                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    GRPCGateway — 网关 (C++)                                     │
+│                                    RPCGateway — 网关 (C++)                                     │
 │                  协议转换 · 路由分发 · 限流熔断 · Token 鉴权 · **TLS termination**                │
 │                   证书来源：启动时调用 CertService.DistributeCert()                               │
 └────────────────────────────────────┬────────────────────────────────────────────────────────────┘
@@ -256,7 +256,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 | 微服务 | 优先级 | 职责 | 说明 |
 |--------|--------|------|------|
-| **GRPCGateway** | ✅ 核心 | 对外统一入口 | 协议转换、路由分发、限流控制、鉴权验证 |
+| **RPCGateway** | ✅ 核心 | 对外统一入口 | 协议转换、路由分发、限流控制、鉴权验证 |
 | **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 动态路由、负载均衡、健康检查、服务上下线 |
 | **ConfigCenter** | ✅ 核心 | 配置中心 | 统一配置管理、热更新、配置版本控制 |
 | **TracingService** | ✅ 核心 | 链路追踪 | 请求全链路跟踪、性能分析、故障排查 |
@@ -300,16 +300,16 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 ### 🏛️ 核心框架层（C++）
 
-#### 🔷 GRPCGateway — 网关服务
+#### 🔷 RPCGateway — 网关服务
 
 | 属性 | 说明 |
 |------|------|
 | **语言** | C++17 |
 | **端口** | 50051 |
 | **优先级** | ✅ 核心 |
-| **代码仓库** | `GRPCGateway/` |
+| **代码仓库** | `RPCGateway/` |
 
-GRPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换（HTTP↔Protobuf）、路由分发、令牌桶限流、Token 鉴权、**TLS termination**。基于 C++ epoll 事件驱动，单机支撑数万并发。TLS 证书由 CertService 独立分发，启动时调用 `DistributeCert` 获取。
+RPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换（HTTP↔Protobuf）、路由分发、令牌桶限流、Token 鉴权、**TLS termination**。基于 C++ epoll 事件驱动，单机支撑数万并发。TLS 证书由 CertService 独立分发，启动时调用 `DistributeCert` 获取。
 
 ---
 
@@ -417,7 +417,7 @@ SecurityService 是整个架构的**安全基石**，选择 Rust 保障内存安
 | **优先级** | ✅ 核心 |
 | **代码仓库** | `CertService/` |
 
-CertService 是独立的 **SSL/TLS 证书分发微服务**，Proto 接口定义于 `proto/source/cert/cert_service.proto`。作为内部 CA 为 GRPCGateway 及所有微服务统一签发、续期、吊销 mTLS 证书，每个服务启动时独立调用 `DistributeCert` 获取。支持 ACME 协议对接 Let's Encrypt 自动获取公网证书，自动生成 Nginx SSL 配置文件和 `nginx.conf`。证书 7 天短生命周期，到期前 24h 自动续期，支持 CRL 吊销。
+CertService 是独立的 **SSL/TLS 证书分发微服务**，Proto 接口定义于 `proto/source/cert/cert_service.proto`。作为内部 CA 为 RPCGateway 及所有微服务统一签发、续期、吊销 mTLS 证书，每个服务启动时独立调用 `DistributeCert` 获取。支持 ACME 协议对接 Let's Encrypt 自动获取公网证书，自动生成 Nginx SSL 配置文件和 `nginx.conf`。证书 7 天短生命周期，到期前 24h 自动续期，支持 CRL 吊销。
 
 ---
 
@@ -535,7 +535,7 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化�
 
 ## 🔌 核心框架微服务接口
 
-### GRPCGateway — 网关服务（C++，端口:50051）
+### RPCGateway — 网关服务（C++，端口:50051）
 
 对外统一入口，负责 HTTP/Protobuf 协议转换、路由分发、限流控制、鉴权验证。
 
@@ -667,7 +667,7 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化�
 
 安全调用流程示例（用户查询敏感数据）：
 ┌──────────┐    ┌─────────────┐    ┌──────────────────┐    ┌──────────┐
-│  前端     │───▶│  GRPCGateway │───▶│  业务服务(Go)     │───▶│  MySQL   │
+│  前端     │───▶│  RPCGateway │───▶│  业务服务(Go)     │───▶│  MySQL   │
 │          │    │  (C++)      │    │  (ArticleService) │    │          │
 │  用户查询  │    │  mTLS验证    │    │  查询数据          │    │  TDE解密  │
 │  手机号   │    │  Token鉴权   │    │  ┌─────────────┐  │    │          │
@@ -984,8 +984,8 @@ cd ConfigCenter && mkdir build && cd build
 cmake .. && cmake --build . && ./ConfigCenter
 
 # 启动网关
-cd GRPCGateway && mkdir build && cd build
-cmake .. && cmake --build . && ./GRPCGateway
+cd RPCGateway && mkdir build && cd build
+cmake .. && cmake --build . && ./RPCGateway
 
 # 启动链路追踪
 cd TracingService && mkdir build && cd build
@@ -1047,7 +1047,7 @@ cd vue && npm install && npm run dev
 
 | 服务 | 语言 | 端口 | 类型 | 所属层级 |
 |------|------|------|------|---------|
-| GRPCGateway | C++ | 50051 | 核心框架 | 网关层 |
+| RPCGateway | C++ | 50051 | 核心框架 | 网关层 |
 | ServiceRegistry | C++ | 51051 | 核心框架 | 基础设施层 |
 | ConfigCenter | C++ | 51052 | 核心框架 | 基础设施层 |
 | TracingService | C++ | 51053 | 核心框架 | 可观测性层 |
@@ -1098,7 +1098,7 @@ cd vue && npm install && npm run dev
   - [ ] 配置管理页面 — 查看/编辑/推送配置
   - [ ] 健康检查页面 — 各服务健康状态概览
 - [ ] **后端对接**
-  - [ ] 对接 GRPCGateway 网关管理 — 查看路由规则、限流配置
+  - [ ] 对接 RPCGateway 网关管理 — 查看路由规则、限流配置
   - [ ] 对接 ServiceRegistry 注册发现管理 — 查看实例列表、手动上下线
   - [ ] 对接 ConfigCenter 配置中心管理 — 配置 CRUD、版本回溯
   - [ ] 对接 TracingService 链路追踪管理 — 搜索追踪、查看 Span 详情
@@ -1147,7 +1147,7 @@ cd vue && npm install && npm run dev
   - [ ] 自动续期调度器（到期前 24 小时自动续期）
   - [ ] 证书吊销列表（CRL）管理
 - [ ] **集成对接**
-  - [ ] 对接 GRPCGateway 网关 — 敏感字段自动加密/解密
+  - [ ] 对接 RPCGateway 网关 — 敏感字段自动加密/解密
   - [ ] 对接 AdminConsole — 密钥管理面板、证书状态查看
   - [ ] 对接 ServiceRegistry — 安全服务注册发现
   - [ ] 所有业务服务集成 SecurityService 客户端 SDK
@@ -1166,14 +1166,14 @@ cd vue && npm install && npm run dev
   - [ ] SSL 配置模板管理
   - [ ] 热重载 Nginx 配置
 - [ ] **集成对接**
-  - [ ] 对接 GRPCGateway — TLS 证书分发
+  - [ ] 对接 RPCGateway — TLS 证书分发
   - [ ] 对接 AdminConsole — 证书状态查看、手动续期
   - [ ] 对接 ServiceRegistry — 证书服务注册发现
 
 #### 业务微服务
 - [ ] **UserService**（Rust — 安全敏感，内存安全优势）
   - [ ] 用户注册/登录、Token 签发
-  - [ ] Token 验证（对接 GRPCGateway 鉴权中间件）
+  - [ ] Token 验证（对接 RPCGateway 鉴权中间件）
   - [ ] 权限角色管理（RBAC）
   - [ ] 多设备登录管理
 - [ ] **ArticleService**（Go — I/O 密集型 CRUD）

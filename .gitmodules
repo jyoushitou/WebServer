@@ -1,9 +1,9 @@
 [submodule "vue"]
 	path = vue
 	url = https://github.com/jyoushitou/WebSever_Vue.git
-[submodule "GRPCGateway"]
-	path = GRPCGateway
-	url = https://github.com/jyoushitou/WebService_cpp_GRPCGateway.git
+[submodule "RPCGateway"]
+	path = RPCGateway
+	url = https://github.com/jyoushitou/WebService_cpp_RPCGateway.git
 [submodule "MySQL"]
 	path = MySQL
 	url = https://github.com/jyoushitou/cpp_MySQL.git
