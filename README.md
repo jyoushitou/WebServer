@@ -16,6 +16,7 @@
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-%23326CE5?style=flat-square&logo=kubernetes)
 ![mTLS](https://img.shields.io/badge/mTLS-1.3-%23FF4B4B?style=flat-square&logo=letsencrypt)
 ![AES-256](https://img.shields.io/badge/AES--256-GCM-%2300BFA0?style=flat-square&logo=security)
+![Boost](https://img.shields.io/badge/Boost-1.83-%23F7901E?style=flat-square&logo=boost)
 
 ---
 
@@ -189,6 +190,12 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   ├── logos/                          # Logo 资源
 │   └── mockups/                        # 产品原型 / 交互稿
 │   └── 全平台设计资产仓库，统一管理前端和移动端的设计交付物
+│
+├── boost/                              # Boost 库（header-only，直接包含在仓库中）
+│   ├── boost/                          # Boost 头文件（asio/beast/algorithm 等）
+│   └── bin.v2/                         # Boost.Build 构建缓存
+│   └── 所有 C++ 微服务（RPCGateway/ServiceRegistry/ConfigCenter/TracingService/MonitorService/AdminConsole/ServiceConsole/ImageService/SearchService/CertService）均依赖此 Boost 库
+│   └── 核心依赖：Boost.Beast（HTTP/WebSocket）、Boost.Asio（网络 I/O）、Boost.JSON（JSON 解析）、Boost.Algorithm（算法扩展）
 │
 ├── .gitmodules                         # Git 子模块配置
 └── README.md                           # 本文件
@@ -776,6 +783,7 @@ Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化�
 |------|----------|------|
 | C++ 编译器 | C++17（GCC 8+ / MSVC 2019+） | 核心框架编译 |
 | CMake | 3.10+ | C++ 构建系统 |
+| Boost | 1.83+（已包含在仓库中） | C++ 微服务依赖（Beast/Asio/JSON/Algorithm），header-only 无需单独编译 |
 | MySQL | 8.0+ | 数据库 |
 | Protobuf | 3.15+ | 序列化协议（protoc 编译器） |
 | Rust | 1.70+ | UserService（安全敏感认证服务）、SecurityService（加密安全服务） |
@@ -789,6 +797,16 @@ git clone --recursive https://github.com/jyoushitou/WebServer.git
 cd WebServer
 git submodule update --init --recursive
 ```
+
+> **关于 Boost 库**：`boost/` 目录已直接包含在仓库中（header-only 模式），所有 C++ 微服务（RPCGateway、ServiceRegistry、ConfigCenter、TracingService、MonitorService、AdminConsole、ServiceConsole、ImageService、SearchService、CertService）均依赖此 Boost 库。
+>
+> 核心依赖组件：
+> - **Boost.Beast** — HTTP/WebSocket 协议实现，用于 RPCGateway 的 HTTP 协议转换
+> - **Boost.Asio** — 异步网络 I/O 框架，所有 C++ 微服务的网络通信基础
+> - **Boost.JSON** — JSON 解析与序列化，用于配置解析和日志格式化
+> - **Boost.Algorithm** — 算法扩展（字符串处理、集合操作等）
+>
+> 由于采用 header-only 方式，无需单独编译 Boost 库，CMake 配置中通过 `add_subdirectory(boost)` 或 `target_include_directories` 直接引用即可。
 
 ### 2️⃣ 检查前置工具
 
@@ -1280,3 +1298,107 @@ cd vue && npm install && npm run dev
 - 邮箱：[xzt98948364@outlook.com]
 - 项目地址：[https://github.com/jyoushitou/WebServer](https://github.com/jyoushitou/WebServer)
 - 归档仓库：[https://github.com/jyoushitou/WebSever_cpp.git](https://github.com/jyoushitou/WebSever_cpp.git)
+
+## 📜 开源协议与致谢
+
+### 仓库代码许可
+
+本项目自身代码采用 **MIT License** 开源，详见 [LICENSE](./LICENSE) 文件。
+
+```
+MIT License
+
+Copyright (c) 2026 ThornFireSky
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### 第三方组件许可
+
+本项目使用了以下开源组件，特此致谢：
+
+| 组件 | 许可证 | 使用方式 | 说明 |
+|------|--------|---------|------|
+| **Protocol Buffers** | [Apache License 2.0](https://github.com/protocolbuffers/protobuf/blob/main/LICENSE) | 代码生成 | 通过 `protoc` 编译器生成序列化代码，生成的代码可自由使用 |
+| **Boost C++ Libraries** | [Boost Software License 1.0](https://www.boost.org/users/license.html) | header-only 包含 | 直接包含在 `boost/` 目录中，BSL-1.0 允许在 MIT 项目中使用 |
+| **Vue 3** | [MIT License](https://github.com/vuejs/core/blob/main/LICENSE) | 前端依赖 | 独立的前端项目 |
+| **Rust 依赖** (ring, rustls, tonic 等) | MIT / Apache 2.0 双许可 | 构建依赖 | 通过 Cargo 包管理器引入 |
+| **Go 依赖** | BSD-style 许可 | 构建依赖 | 通过 Go Modules 引入 |
+
+### 网络连接组件（不包含代码）
+
+以下组件仅通过网络连接或进程调用方式使用，**不包含其源代码**：
+
+| 组件 | 许可证 | 使用方式 |
+|------|--------|---------|
+| **Elasticsearch** | SSPL / Elastic License | 通过网络 API 调用 |
+| **MySQL** | GPL v2 | 通过网络连接 |
+| **FFmpeg** | LGPL v2.1+ | 通过进程调用 |
+
+### 许可证兼容性说明
+
+- **MIT + BSL-1.0**：完全兼容，Boost 库可直接包含在 MIT 项目中
+- **MIT + Apache 2.0**：完全兼容，Protobuf 生成的代码可在 MIT 项目中自由使用
+- **MIT + LGPL**：通过进程调用 FFmpeg 属于"合理使用"，不触发 LGPL 传染性
+- **MIT + SSPL**：通过网络 API 调用 Elasticsearch 不触发许可证限制
+
+### 版权声明
+
+```
+Protocol Buffers - Copyright (c) 2008 Google Inc. - Apache License 2.0
+Boost C++ Libraries - Copyright (c) 2003-2023 Boost Contributors - BSL-1.0
+Vue.js - Copyright (c) 2014-present Evan You - MIT License
+```
+
+---
+
+## 关于您提出的具体问题
+
+### 1. Proto 标准是否需要添加开源声明？
+
+**不需要**。Protocol Buffers 的 `.proto` 语法本身是 Google 的开放标准，不受版权保护。您编写的 `.proto` 文件属于您的原创代码，受 MIT 协议保护。只有 `protoc` 编译器生成的代码才涉及 Apache 2.0 许可证，但 Apache 2.0 允许在 MIT 项目中自由使用生成的代码。
+
+### 2. Boost 库是否需要添加开源声明？
+
+**建议添加**。虽然 BSL-1.0 非常宽松，允许在 MIT 项目中包含和使用，但**最佳实践**是：
+- 在 `boost/` 目录中保留 Boost 库自带的 LICENSE 文件
+- 在 README 中注明使用了 Boost 库及其许可证
+
+BSL-1.0 的核心要求只有一条：**在源代码中保留版权声明**。您已经将 Boost 库完整包含在仓库中，其自带的 LICENSE 文件已经满足要求。在 README 中添加致谢是额外的礼貌性做法。
+
+---
+
+## 建议的 LICENSE 文件更新
+
+当前 `LICENSE` 文件只包含 MIT 协议文本，建议在文件末尾添加以下注释：
+
+```license
+---
+
+Note: This repository includes third-party components under their own licenses:
+
+- Protocol Buffers (protoc generated code): Apache License 2.0
+  Copyright (c) 2008 Google Inc.
+  https://github.com/protocolbuffers/protobuf
+
+- Boost C++ Libraries: Boost Software License 1.0
+  Copyright (c) 2003-2023 Boost Contributors
+  https://www.boost.org/
+
+See the respective component directories for full license texts.
