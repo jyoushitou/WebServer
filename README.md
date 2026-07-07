@@ -1234,10 +1234,14 @@ cd vue && npm install && npm run dev
 
 ##### 阶段一：Vue 3 Web 前端（进行中）
 - [ ] **Vue 前端** HTTP/JSON 接入
-  - [ ] 文章浏览/搜索页面
-  - [ ] 博客/评论互动页面
-  - [ ] 图片/视频展示页面
-  - [ ] 用户登录/注册页面
+  - [ ] 文章浏览
+  - [ ] 搜索页面
+  - [ ] 博客
+  - [ ] 评论互动页面
+  - [ ] 图片
+  - [ ] 视频展示页面
+  - [ ] 用户登录
+  - [ ] 注册页面
   - [ ] **技术栈**：Vue 3 + TypeScript + Pinia 状态管理 + Vue Router
   - [ ] **性能优化**
     - [ ] 组件懒加载（Vue Router 动态导入）
@@ -1315,8 +1319,8 @@ cd vue && npm install && npm run dev
     - [ ] ProGuard/R8 代码混淆
     - [ ] 签名证书管理（Google Play App Signing）
 
-##### 阶段三：Qt Desktop App（已完成 ✅）
-- [ ] **Qt Desktop App**（C++ — 高性能桌面客户端）✅ 已完成
+##### 阶段三：Qt Desktop App 📋 规划中
+- [ ] **Qt Desktop App**（C++ — 高性能桌面客户端）
   - [ ] **技术选型**：Qt 6 + C++17 + TCP/Protobuf 直连网关
   - [ ] **核心页面**
     - [ ] 内容信息流 — 文章/博客/图片/视频聚合浏览
