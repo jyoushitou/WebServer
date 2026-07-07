@@ -24,7 +24,7 @@
 
 本项目是一个**从零开始、不依赖任何第三方 Web 框架**的 C++ HTTP 服务器，逐步演进为完整的 Protobuf 微服务架构。
 
-> **原 C++ 单体后端已归档**：[WebSever_cpp](https://github.com/jyoushitou/WebSever_cpp.git)
+> **原 C++ 单体后端已归档**：[WebServer_cpp](https://github.com/jyoushitou/WebServer_cpp.git)
 >
 > 归档版本为纯 C++ 实现的单体 HTTP 服务器，当前仓库为微服务架构演进版本。
 
@@ -540,6 +540,15 @@ iOS 原生 App 使用 Swift + SwiftUI 开发，Protobuf 序列化通过 TCP 连�
 | **代码仓库** | `mobile/android/` |
 
 Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化通过 TCP 连接网关通信。功能覆盖与 iOS 一致，确保跨平台用户体验统一。两者均通过 SecurityService 加密敏感通信数据。
+
+#### Qt Desktop App（C++）
+
+| 属性 | 说明 |
+|------|------|
+| **技术栈** | Qt 6 + C++17 + TCP/Protobuf |
+| **代码仓库** | `desktop/` |
+
+Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protobuf 序列化通过 TCP 直连网关通信。支持 Windows/macOS/Linux 三平台，硬件加速渲染（OpenGL/Vulkan），提供内容信息流、文章/博客详情、图片画廊、视频播放、用户中心等完整功能。独立可执行文件分发，支持 AppImage/DMG/NSIS 等安装包格式。
 
 ---
 
@@ -1097,7 +1106,7 @@ cd vue && npm install && npm run dev
 - [x] HTTP 协议手动解析、多线程并发处理
 - [x] MySQL 数据库直连、Vue 3 前端界面
 - [x] 用户认证系统（Token）、异步任务处理
-- [x] 归档仓库：https://github.com/jyoushitou/WebSever_cpp.git
+- [x] 归档仓库：https://github.com/jyoushitou/WebServer_cpp.git
 
 ### 阶段二：微服务架构 🔄 进行中
 
@@ -1415,12 +1424,15 @@ cd vue && npm install && npm run dev
 
 ## 📬 联系方式
 
+
 - 项目维护者：[jyoushitou]
 - 邮箱：[xzt98948364@outlook.com]
+
+
 - 项目地址：[https://github.com/jyoushitou/WebServer](https://github.com/jyoushitou/WebServer)
 - 归档仓库：[https://github.com/jyoushitou/WebSever_cpp.git](https://github.com/jyoushitou/WebSever_cpp.git)
 
-## 📜 开源协议与致谢
+# 📜 开源协议与致谢
 
 ### 仓库代码许可
 
@@ -1429,7 +1441,7 @@ cd vue && npm install && npm run dev
 ```
 MIT License
 
-Copyright (c) 2026 ThornFireSky
+Copyright (c) 2025 jyoushitou
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1486,40 +1498,3 @@ Protocol Buffers - Copyright (c) 2008 Google Inc. - Apache License 2.0
 Boost C++ Libraries - Copyright (c) 2003-2023 Boost Contributors - BSL-1.0
 Vue.js - Copyright (c) 2014-present Evan You - MIT License
 ```
-
----
-
-## 关于您提出的具体问题
-
-### 1. Proto 标准是否需要添加开源声明？
-
-**不需要**。Protocol Buffers 的 `.proto` 语法本身是 Google 的开放标准，不受版权保护。您编写的 `.proto` 文件属于您的原创代码，受 MIT 协议保护。只有 `protoc` 编译器生成的代码才涉及 Apache 2.0 许可证，但 Apache 2.0 允许在 MIT 项目中自由使用生成的代码。
-
-### 2. Boost 库是否需要添加开源声明？
-
-**建议添加**。虽然 BSL-1.0 非常宽松，允许在 MIT 项目中包含和使用，但**最佳实践**是：
-- 在 `boost/` 目录中保留 Boost 库自带的 LICENSE 文件
-- 在 README 中注明使用了 Boost 库及其许可证
-
-BSL-1.0 的核心要求只有一条：**在源代码中保留版权声明**。您已经将 Boost 库完整包含在仓库中，其自带的 LICENSE 文件已经满足要求。在 README 中添加致谢是额外的礼貌性做法。
-
----
-
-## 建议的 LICENSE 文件更新
-
-当前 `LICENSE` 文件只包含 MIT 协议文本，建议在文件末尾添加以下注释：
-
-```license
----
-
-Note: This repository includes third-party components under their own licenses:
-
-- Protocol Buffers (protoc generated code): Apache License 2.0
-  Copyright (c) 2008 Google Inc.
-  https://github.com/protocolbuffers/protobuf
-
-- Boost C++ Libraries: Boost Software License 1.0
-  Copyright (c) 2003-2023 Boost Contributors
-  https://www.boost.org/
-
-See the respective component directories for full license texts.
