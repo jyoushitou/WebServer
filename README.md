@@ -264,35 +264,45 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 ### 核心框架组件（C++ 实现）
 
-| 微服务 | 优先级 | 职责 | 说明 |
-|--------|--------|------|------|
-| **RPCGateway** | ✅ 核心 | 对外统一入口 | 协议转换、路由分发、限流控制、鉴权验证 |
-| **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 动态路由、负载均衡、健康检查、服务上下线 |
-| **ConfigCenter** | ✅ 核心 | 配置中心 | 统一配置管理、热更新、配置版本控制 |
-| **TracingService** | ✅ 核心 | 链路追踪 | 请求全链路跟踪、性能分析、故障排查 |
-| **MonitorService** | ✅ 核心 | 监控告警 | 指标采集、告警规则、可视化面板 |
-| **AdminConsole** | ✅ 核心 | 内部管理面板 | 管理核心框架服务（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web UI |
-| **ServiceConsole** | ✅ 核心 | 业务管理面板 | 管理业务服务（用户/文章/博客/图片/视频/搜索）的独立 Web UI |
+| 微服务 | 优先级 | 职责 | 并发模型 | 说明 |
+|--------|--------|------|---------|------|
+| **RPCGateway** | ✅ 核心 | 对外统一入口 | 异步多线程 (epoll + 线程池) | 协议转换、路由分发、限流控制、鉴权验证 |
+| **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 异步多线程 (epoll + 线程池) | 动态路由、负载均衡、健康检查、服务上下线 |
+| **ConfigCenter** | ✅ 核心 | 配置中心 | 异步多线程 (epoll + 线程池) | 统一配置管理、热更新、配置版本控制 |
+| **TracingService** | ✅ 核心 | 链路追踪 | 异步多线程 (epoll + 线程池) | 请求全链路跟踪、性能分析、故障排查 |
+| **MonitorService** | ✅ 核心 | 监控告警 | 异步多线程 (epoll + 线程池) | 指标采集、告警规则、可视化面板 |
+| **AdminConsole** | ✅ 核心 | 内部管理面板 | 单线程事件循环 | 管理核心框架服务（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web UI |
+| **ServiceConsole** | ✅ 核心 | 业务管理面板 | 单线程事件循环 | 管理业务服务（用户/文章/博客/图片/视频/搜索）的独立 Web UI |
 
 ### 业务微服务（多语言）
 
-| 微服务 | 语言 | 端口 | 职责 |
-|--------|------|------|------|
-| UserService | Rust | 50052 | 用户注册/登录、Token 管理、权限控制 |
-| ArticleService | Go | 50053 | 文章 CRUD、分类管理、标签管理 |
-| BlogService | Go | 50054 | 博客管理、评论系统、点赞收藏 |
-| ImageService | C++ | 50055 | 图片像素级处理、缩略图生成、格式转换 |
-| VideoService | Go | 50056 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
-| SearchService | C++ | 50057 | 全文索引、搜索排序、搜索建议 |
+| 微服务 | 语言 | 端口 | 并发模型 | 职责 |
+|--------|------|------|---------|------|
+| UserService | Rust | 50052 | 异步多线程 (tokio) | 用户注册/登录、Token 管理、权限控制 |
+| ArticleService | Go | 50053 | goroutine 协程 | 文章 CRUD、分类管理、标签管理 |
+| BlogService | Go | 50054 | goroutine 协程 | 博客管理、评论系统、点赞收藏 |
+| ImageService | C++ | 50055 | 异步 I/O + CPU 线程池 | 图片像素级处理、缩略图生成、格式转换 |
+| VideoService | Go | 50056 | goroutine 协程 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
+| SearchService | C++ | 50057 | 异步 I/O + 缓存层 | 全文索引、搜索排序、搜索建议 |
 
 ### 安全微服务（Rust 实现 🔐）
 
-| 微服务 | 语言 | 端口 | 职责 | 核心算法/协议 |
-|--------|------|------|------|-------------|
-| **SecurityService** | Rust | 51057 | 数据加密/解密、密钥管理、数字签名 | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
-| **CertService** | C++ | 51058 | SSL/TLS 证书自动分发、续期、Nginx 配置生成 | X.509 / ACME / Let's Encrypt |
+| 微服务 | 语言 | 端口 | 并发模型 | 职责 | 核心算法/协议 |
+|--------|------|------|---------|------|-------------|
+| **SecurityService** | Rust | 51057 | 异步多线程 (tokio) | 数据加密/解密、密钥管理、数字签名 | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
+| **CertService** | C++ | 51058 | 异步多线程 (epoll + 线程池) | SSL/TLS 证书自动分发、续期、Nginx 配置生成 | X.509 / ACME / Let's Encrypt |
 
-#### 端口规划说明
+#### 并发模型设计
+
+| 并发模型 | 适用服务 | 说明 |
+|---------|---------|------|
+| **异步多线程 (epoll + 线程池)** | RPCGateway, ServiceRegistry, ConfigCenter, TracingService, MonitorService, CertService | 高并发网络 I/O 服务，使用 Boost.Asio epoll 事件驱动 + 多线程 worker 池，支撑数万并发连接 |
+| **异步 I/O + CPU 线程池** | ImageService, SearchService | 混合型服务：异步接收网络请求，CPU 密集型任务（图片处理/搜索排序）交由独立线程池并行处理 |
+| **单线程事件循环** | AdminConsole, ServiceConsole | 管理面板服务，连接数少（< 100）、操作频率低，单线程 Boost.Asio 事件循环即可满足需求，避免多线程竞态 |
+| **goroutine 协程** | ArticleService, BlogService, VideoService (Go) | Go 语言原生 goroutine 轻量级并发，适合 I/O 密集型 CRUD 和任务调度 |
+| **异步多线程 (tokio)** | UserService, SecurityService (Rust) | Rust tokio 运行时异步多线程，内存安全 + 高性能，适合安全敏感服务 |
+
+### 端口规划说明
 
 | 端口范围 | 服务类型 | 说明 |
 |---------|---------|------|
@@ -388,6 +398,8 @@ MonitorService 是微服务架构的 **"体检中心"**。采集 CPU/内存/QPS/
 
 AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治理（路由/限流/实例上下线）、系统监控（CPU/内存/QPS 仪表盘）、配置管理（可视化编辑+热更新）、链路追踪（TraceID 搜索+瀑布图）、告警管理（规则配置+处理记录）。独立 Web UI，Protobuf 直连核心服务，操作全审计。
 
+**并发模型**：单线程事件循环（Boost.Asio）。管理面板连接数少（< 100 并发）、操作频率低，单线程即可满足需求，避免多线程竞态条件和调试复杂度。
+
 ---
 
 #### 🟦 ServiceConsole — 业务管理面板
@@ -400,6 +412,8 @@ AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治
 | **代码仓库** | `ServiceConsole/` |
 
 ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用户管理（角色权限/封禁解封）、内容审核（文章/博客/图片/视频审核队列）、运营统计（用户增长/内容产出/互动数据图表）。独立 Web UI，Protobuf 直连业务微服务，操作同步审计日志。
+
+**并发模型**：单线程事件循环（Boost.Asio）。管理面板连接数少（< 100 并发）、操作频率低，单线程即可满足需求，避免多线程竞态条件和调试复杂度。
 
 ---
 
