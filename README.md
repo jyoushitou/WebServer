@@ -1446,6 +1446,7 @@ cd vue && npm install && npm run dev
 - 项目维护者：[jyoushitou]
 - 邮箱：[xzt98948364@outlook.com]
 
+- 博客地址：[https://jyoushitou.github.io/](https://jyoushitou.github.io/)
 
 - 项目地址：[https://github.com/jyoushitou/WebServer](https://github.com/jyoushitou/WebServer)
 - 归档仓库：[https://github.com/jyoushitou/WebSever_cpp.git](https://github.com/jyoushitou/WebSever_cpp.git)
