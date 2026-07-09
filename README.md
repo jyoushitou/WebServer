@@ -51,7 +51,8 @@
   ├── 业务微服务（多语言）
   │   ├── C++（高性能计算密集型）
   │   │   ├── ImageService    — 图片像素级处理/缩略图生成/格式转换 (端口:50055)
-  │   │   └── SearchService   — 全文索引/搜索排序/ES 集成 (端口:50057)
+  │   │   ├── SearchService   — 全文索引/搜索排序/ES 集成 (端口:50057)
+  │   │   └── DatabaseService — MySQL 数据库封装/连接池/读写分离/ORM (端口:50058)
   │   ├── Go（I/O 密集型）
   │   │   ├── ArticleService  — 文章 CRUD/分类标签管理 (端口:50053)
   │   │   ├── BlogService     — 博客管理/评论系统/点赞收藏 (端口:50054)
@@ -204,7 +205,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 └── README.md                           # 本文件
 ```
 
-## 🧠 架构设计
+## 🧠 架构设计（MySQL 微服务化后）
 
 ### 完整架构图
 
@@ -247,6 +248,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 │                      所有业务服务启动时从 CertService 获取 mTLS 证书                          │
 ├─────────────────────────────────────────────────────────────────────────────────────────────────┤
 │               SearchService (C++ :50057)   ←→   Elasticsearch (:9200)                           │
+│               DatabaseService (C++ :50058) ←→   MySQL (:3306)                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ 所有服务在启动时和到期前 24h 调用：
@@ -284,6 +286,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | ImageService | C++ | 50055 | 异步 I/O + CPU 线程池 | 图片像素级处理、缩略图生成、格式转换 |
 | VideoService | Go | 50056 | goroutine 协程 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
 | SearchService | C++ | 50057 | 异步 I/O + 缓存层 | 全文索引、搜索排序、搜索建议 |
+| DatabaseService | C++ | 50058 | 异步 I/O + 连接池 | MySQL 数据库封装、连接池管理、读写分离、ORM 映射 |
 
 ### 安全微服务（Rust 实现 🔐）
 
@@ -306,7 +309,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 | 端口范围 | 服务类型 | 说明 |
 |---------|---------|------|
-| 50051–50057 | 业务微服务 | 网关 + 6 个业务服务（User/Article/Blog/Image/Video/Search） |
+| 50051–50058 | 业务微服务 | 网关 + 7 个业务服务（User/Article/Blog/Image/Video/Search/Database） |
 | 51051–51058 | 核心框架 + 安全 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService + CertService |
 | 60907 | 前端 | Vue 3 开发服务器 |
 
@@ -1106,6 +1109,7 @@ cd vue && npm install && npm run dev
 | ImageService | C++ | 50055 | 业务服务 | 业务层 |
 | VideoService | Go | 50056 | 业务服务 | 业务层 |
 | SearchService | C++ | 50057 | 业务服务 | 业务层 |
+| DatabaseService | C++ | 50058 | 业务服务 | 数据层 |
 | Vue 前端 | JS | 60907 | 前端 | 前端层 |
 | Elasticsearch | Java | 9200 | 搜索引擎 | 数据层 |
 
@@ -1372,7 +1376,7 @@ cd vue && npm install && npm run dev
         - [ ] 静态链接依赖（减少运行时库冲突）
       - [ ] **macOS (Apple Silicon + Intel)**
         - [ ] 通用二进制（Universal Binary），同时支持 arm64 和 x86_64
-        - [ ] DMG 磁盘映像 + 公证（Notarization）
+        - [ ]MG 磁盘映像 + 公证（Notariza）
         - [ ] Mac App Store 分发（Sandbox 适配）
         - [ ] Sparkle 自动更新框架集成
       - [ ] **跨平台构建流水线**
