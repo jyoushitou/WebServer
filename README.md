@@ -52,7 +52,7 @@
   │   ├── C++（高性能计算密集型）
   │   │   ├── ImageService    — 图片像素级处理/缩略图生成/格式转换 (端口:50055)
   │   │   ├── SearchService   — 全文索引/搜索排序/ES 集成 (端口:50057)
-  │   │   └── DatabaseService — MySQL 数据库封装/连接池/读写分离/ORM (端口:50058)
+  │   │   └── MySQL — MySQL 数据库封装/连接池/读写分离/ORM (端口:50058)
   │   ├── Go（I/O 密集型）
   │   │   ├── ArticleService  — 文章 CRUD/分类标签管理 (端口:50053)
   │   │   ├── BlogService     — 博客管理/评论系统/点赞收藏 (端口:50054)
@@ -248,7 +248,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 │                      所有业务服务启动时从 CertService 获取 mTLS 证书                          │
 ├─────────────────────────────────────────────────────────────────────────────────────────────────┤
 │               SearchService (C++ :50057)   ←→   Elasticsearch (:9200)                           │
-│               DatabaseService (C++ :50058) ←→   MySQL (:3306)                                   │
+│               MySQL (C++ :50058) ←→   MySQL (:3306)                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ 所有服务在启动时和到期前 24h 调用：
@@ -286,7 +286,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 | ImageService | C++ | 50055 | 异步 I/O + CPU 线程池 | 图片像素级处理、缩略图生成、格式转换 |
 | VideoService | Go | 50056 | goroutine 协程 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
 | SearchService | C++ | 50057 | 异步 I/O + 缓存层 | 全文索引、搜索排序、搜索建议 |
-| DatabaseService | C++ | 50058 | 异步 I/O + 连接池 | MySQL 数据库封装、连接池管理、读写分离、ORM 映射 |
+| MySQL | C++ | 50058 | 异步 I/O + 连接池 | MySQL 数据库封装、连接池管理、读写分离、ORM 映射 |
 
 ### 安全微服务（Rust 实现 🔐）
 
@@ -901,6 +901,7 @@ proto/
         ├── go/                      # Go 生成代码
         └── rust/                    # Rust 生成代码
 ```
+PS:所有公共的服务如多线程将统一放于RPCGateway子仓库里，其他文件编译时将会读取补齐。
 
 #### 生成 C++ 代码（核心框架）
 
@@ -1109,7 +1110,7 @@ cd vue && npm install && npm run dev
 | ImageService | C++ | 50055 | 业务服务 | 业务层 |
 | VideoService | Go | 50056 | 业务服务 | 业务层 |
 | SearchService | C++ | 50057 | 业务服务 | 业务层 |
-| DatabaseService | C++ | 50058 | 业务服务 | 数据层 |
+| MySQL | C++ | 50058 | 业务服务 | 数据层 |
 | Vue 前端 | JS | 60907 | 前端 | 前端层 |
 | Elasticsearch | Java | 9200 | 搜索引擎 | 数据层 |
 
