@@ -133,32 +133,51 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── build/                          # 编译输出
 │
 ├── common/                             # [子仓库] 公共库 (C++) ✅ 核心
-│   ├── include/                        # 公共头文件
+│   ├── body/                           # 公共头文件 + 源文件（统一存放）
 │   │   ├── common/                     # 公共模块
 │   │   │   ├── logger.h                # 日志系统（统一日志格式、级别控制、文件轮转）
+│   │   │   ├── logger.cpp              # 日志系统实现
 │   │   │   ├── config.h                # 配置解析（JSON/YAML 配置加载、环境变量覆盖）
+│   │   │   ├── config.cpp              # 配置解析实现
 │   │   │   ├── thread_pool.h           # 线程池（通用任务队列、动态扩缩容）
+│   │   │   ├── thread_pool.cpp         # 线程池实现
 │   │   │   ├── timer.h                 # 定时器（高精度定时、定时任务调度）
+│   │   │   ├── timer.cpp               # 定时器实现
 │   │   │   ├── buffer.h                # 缓冲区（环形缓冲区、动态扩容）
+│   │   │   ├── buffer.cpp              # 缓冲区实现
 │   │   │   ├── singleton.h             # 单例模板（线程安全、懒加载）
 │   │   │   └── noncopyable.h           # 不可拷贝基类
 │   │   ├── network/                    # 网络模块
 │   │   │   ├── tcp_connection.h        # TCP 连接封装（读写缓冲区、连接状态管理）
+│   │   │   ├── tcp_connection.cpp      # TCP 连接封装实现
 │   │   │   ├── tcp_server.h            # TCP 服务器（Acceptor、连接管理、事件回调）
+│   │   │   ├── tcp_server.cpp          # TCP 服务器实现
 │   │   │   ├── tcp_client.h            # TCP 客户端（连接池、重连机制）
+│   │   │   ├── tcp_client.cpp          # TCP 客户端实现
 │   │   │   ├── event_loop.h            # 事件循环（epoll 封装、事件分发）
+│   │   │   ├── event_loop.cpp          # 事件循环实现
 │   │   │   ├── event_loop_thread_pool.h # 事件循环线程池（多 Reactor 模型）
-│   │   │   └── socket_utils.h          # Socket 工具函数（地址解析、非阻塞设置）
+│   │   │   ├── event_loop_thread_pool.cpp # 事件循环线程池实现
+│   │   │   ├── socket_utils.h          # Socket 工具函数（地址解析、非阻塞设置）
+│   │   │   └── socket_utils.cpp        # Socket 工具函数实现
 │   │   ├── rpc/                        # RPC 模块
 │   │   │   ├── rpc_channel.h           # RPC 通道（服务发现、负载均衡、连接复用）
+│   │   │   ├── rpc_channel.cpp         # RPC 通道实现
 │   │   │   ├── rpc_controller.h        # RPC 控制器（超时控制、取消操作）
+│   │   │   ├── rpc_controller.cpp      # RPC 控制器实现
 │   │   │   ├── rpc_codec.h             # RPC 编解码（Protobuf 序列化/反序列化、帧协议）
+│   │   │   ├── rpc_codec.cpp           # RPC 编解码实现
 │   │   │   ├── rpc_server.h            # RPC 服务器（方法注册、请求分发）
-│   │   │   └── rpc_client.h            # RPC 客户端（异步调用、回调管理）
+│   │   │   ├── rpc_server.cpp          # RPC 服务器实现
+│   │   │   ├── rpc_client.h            # RPC 客户端（异步调用、回调管理）
+│   │   │   └── rpc_client.cpp          # RPC 客户端实现
 │   │   ├── serialize/                  # 序列化模块
 │   │   │   ├── json_serializer.h       # JSON 序列化（Boost.JSON 封装）
+│   │   │   ├── json_serializer.cpp     # JSON 序列化实现
 │   │   │   ├── protobuf_serializer.h   # Protobuf 序列化（消息编解码、字段反射）
-│   │   │   └── binary_serializer.h     # 二进制序列化（紧凑编码、大端/小端转换）
+│   │   │   ├── protobuf_serializer.cpp # Protobuf 序列化实现
+│   │   │   ├── binary_serializer.h     # 二进制序列化（紧凑编码、大端/小端转换）
+│   │   │   └── binary_serializer.cpp   # 二进制序列化实现
 │   │   ├── crypto/                     # 加密模块
 │   │   │   ├── hash.h                  # 哈希函数（MD5、SHA256、CRC32）
 │   │   │   ├── base64.h                # Base64 编解码
@@ -169,47 +188,6 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   │       ├── time_utils.h            # 时间工具（时间戳转换、格式化、时区处理）
 │   │       ├── async_task.h            # 异步任务（Future/Promise 模式）
 │   │       └── error.h                 # 错误处理（错误码、异常封装）
-│   ├── src/                            # 公共源文件
-│   │   ├── common/                     # 公共模块实现
-│   │   │   ├── logger.cpp
-│   │   │   ├── config.cpp
-│   │   │   ├── thread_pool.cpp
-│   │   │   ├── timer.cpp
-│   │   │   └── buffer.cpp
-│   │   ├── network/                    # 网络模块实现
-│   │   │   ├── tcp_connection.cpp
-│   │   │   ├── tcp_server.cpp
-│   │   │   ├── tcp_client.cpp
-│   │   │   ├── event_loop.cpp
-│   │   │   ├── event_loop_thread_pool.cpp
-│   │   │   └── socket_utils.cpp
-│   │   ├── rpc/                        # RPC 模块实现
-│   │   │   ├── rpc_channel.cpp
-│   │   │   ├── rpc_controller.cpp
-│   │   │   ├── rpc_codec.cpp
-│   │   │   ├── rpc_server.cpp
-│   │   │   └── rpc_client.cpp
-│   │   ├── serialize/                  # 序列化模块实现
-│   │   │   ├── json_serializer.cpp
-│   │   │   ├── protobuf_serializer.cpp
-│   │   │   └── binary_serializer.cpp
-│   │   ├── crypto/                     # 加密模块实现
-│   │   │   ├── hash.cpp
-│   │   │   ├── base64.cpp
-│   │   │   └── uuid.cpp
-│   │   └── utility/                    # 工具模块实现
-│   │       ├── string_utils.cpp
-│   │       ├── file_utils.cpp
-│   │       ├── time_utils.cpp
-│   │       ├── async_task.cpp
-│   │       └── error.cpp
-│   ├── tests/                          # 单元测试
-│   │   ├── test_logger.cpp
-│   │   ├── test_thread_pool.cpp
-│   │   ├── test_tcp_server.cpp
-│   │   ├── test_rpc_codec.cpp
-│   │   ├── test_json_serializer.cpp
-│   │   └── test_string_utils.cpp
 │   ├── CMakeLists.txt                  # CMake 构建配置（编译为静态库 common.lib）
 │   └── README.md                       # 公共库说明文档
 │
@@ -347,52 +325,52 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 ### 核心框架组件（C++ 实现）
 
-| 微服务 | 优先级 | 职责 | 并发模型 | 说明 |
-|--------|--------|------|---------|------|
-| **RPCGateway** | ✅ 核心 | 对外统一入口 | 异步多线程 (epoll + 线程池) | 协议转换、路由分发、限流控制、鉴权验证 |
-| **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 异步多线程 (epoll + 线程池) | 动态路由、负载均衡、健康检查、服务上下线 |
-| **ConfigCenter** | ✅ 核心 | 配置中心 | 异步多线程 (epoll + 线程池) | 统一配置管理、热更新、配置版本控制 |
-| **TracingService** | ✅ 核心 | 链路追踪 | 异步多线程 (epoll + 线程池) | 请求全链路跟踪、性能分析、故障排查 |
-| **MonitorService** | ✅ 核心 | 监控告警 | 异步多线程 (epoll + 线程池) | 指标采集、告警规则、可视化面板 |
-| **AdminConsole** | ✅ 核心 | 内部管理面板 | 单线程事件循环 | 管理核心框架服务（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web UI |
-| **ServiceConsole** | ✅ 核心 | 业务管理面板 | 单线程事件循环 | 管理业务服务（用户/文章/博客/图片/视频/搜索）的独立 Web UI |
+| 微服务              | 优先级  | 职责         | 并发模型                    | 说明                                                                      |
+| ------------------- | ------- | ------------ | --------------------------- | ------------------------------------------------------------------------- |
+| **RPCGateway**      | ✅ 核心 | 对外统一入口 | 异步多线程 (epoll + 线程池) | 协议转换、路由分发、限流控制、鉴权验证                                    |
+| **ServiceRegistry** | ✅ 核心 | 服务注册发现 | 异步多线程 (epoll + 线程池) | 动态路由、负载均衡、健康检查、服务上下线                                  |
+| **ConfigCenter**    | ✅ 核心 | 配置中心     | 异步多线程 (epoll + 线程池) | 统一配置管理、热更新、配置版本控制                                        |
+| **TracingService**  | ✅ 核心 | 链路追踪     | 异步多线程 (epoll + 线程池) | 请求全链路跟踪、性能分析、故障排查                                        |
+| **MonitorService**  | ✅ 核心 | 监控告警     | 异步多线程 (epoll + 线程池) | 指标采集、告警规则、可视化面板                                            |
+| **AdminConsole**    | ✅ 核心 | 内部管理面板 | 单线程事件循环              | 管理核心框架服务（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web UI |
+| **ServiceConsole**  | ✅ 核心 | 业务管理面板 | 单线程事件循环              | 管理业务服务（用户/文章/博客/图片/视频/搜索）的独立 Web UI                |
 
 ### 业务微服务（多语言）
 
-| 微服务 | 语言 | 端口 | 并发模型 | 职责 |
-|--------|------|------|---------|------|
-| UserService | Rust | 50052 | 异步多线程 (tokio) | 用户注册/登录、Token 管理、权限控制 |
-| ArticleService | Go | 50053 | goroutine 协程 | 文章 CRUD、分类管理、标签管理 |
-| BlogService | Go | 50054 | goroutine 协程 | 博客管理、评论系统、点赞收藏 |
-| ImageService | C++ | 50055 | 异步 I/O + CPU 线程池 | 图片像素级处理、缩略图生成、格式转换 |
-| VideoService | Go | 50056 | goroutine 协程 | 视频上传、转码任务调度（FFmpeg）、流媒体分发 |
-| SearchService | C++ | 50057 | 异步 I/O + 缓存层 | 全文索引、搜索排序、搜索建议 |
-| MySQL | C++ | 50058 | 异步 I/O + 连接池 | MySQL 数据库封装、连接池管理、读写分离、ORM 映射 |
+| 微服务         | 语言 | 端口  | 并发模型              | 职责                                             |
+| -------------- | ---- | ----- | --------------------- | ------------------------------------------------ |
+| UserService    | Rust | 50052 | 异步多线程 (tokio)    | 用户注册/登录、Token 管理、权限控制              |
+| ArticleService | Go   | 50053 | goroutine 协程        | 文章 CRUD、分类管理、标签管理                    |
+| BlogService    | Go   | 50054 | goroutine 协程        | 博客管理、评论系统、点赞收藏                     |
+| ImageService   | C++  | 50055 | 异步 I/O + CPU 线程池 | 图片像素级处理、缩略图生成、格式转换             |
+| VideoService   | Go   | 50056 | goroutine 协程        | 视频上传、转码任务调度（FFmpeg）、流媒体分发     |
+| SearchService  | C++  | 50057 | 异步 I/O + 缓存层     | 全文索引、搜索排序、搜索建议                     |
+| MySQL          | C++  | 50058 | 异步 I/O + 连接池     | MySQL 数据库封装、连接池管理、读写分离、ORM 映射 |
 
 ### 安全微服务（Rust 实现 🔐）
 
-| 微服务 | 语言 | 端口 | 并发模型 | 职责 | 核心算法/协议 |
-|--------|------|------|---------|------|-------------|
-| **SecurityService** | Rust | 51057 | 异步多线程 (tokio) | 数据加密/解密、密钥管理、数字签名 | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
-| **CertService** | C++ | 51058 | 异步多线程 (epoll + 线程池) | SSL/TLS 证书自动分发、续期、Nginx 配置生成 | X.509 / ACME / Let's Encrypt |
+| 微服务              | 语言 | 端口  | 并发模型                    | 职责                                       | 核心算法/协议                                                      |
+| ------------------- | ---- | ----- | --------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| **SecurityService** | Rust | 51057 | 异步多线程 (tokio)          | 数据加密/解密、密钥管理、数字签名          | AES-256-GCM / RSA-OAEP / ECIES / Ed25519 / ECDSA / SHA-256 / SHA-3 |
+| **CertService**     | C++  | 51058 | 异步多线程 (epoll + 线程池) | SSL/TLS 证书自动分发、续期、Nginx 配置生成 | X.509 / ACME / Let's Encrypt                                       |
 
 #### 并发模型设计
 
-| 并发模型 | 适用服务 | 说明 |
-|---------|---------|------|
-| **异步多线程 (epoll + 线程池)** | RPCGateway, ServiceRegistry, ConfigCenter, TracingService, MonitorService, CertService | 高并发网络 I/O 服务，使用 Boost.Asio epoll 事件驱动 + 多线程 worker 池，支撑数万并发连接 |
-| **异步 I/O + CPU 线程池** | ImageService, SearchService | 混合型服务：异步接收网络请求，CPU 密集型任务（图片处理/搜索排序）交由独立线程池并行处理 |
-| **单线程事件循环** | AdminConsole, ServiceConsole | 管理面板服务，连接数少（< 100）、操作频率低，单线程 Boost.Asio 事件循环即可满足需求，避免多线程竞态 |
-| **goroutine 协程** | ArticleService, BlogService, VideoService (Go) | Go 语言原生 goroutine 轻量级并发，适合 I/O 密集型 CRUD 和任务调度 |
-| **异步多线程 (tokio)** | UserService, SecurityService (Rust) | Rust tokio 运行时异步多线程，内存安全 + 高性能，适合安全敏感服务 |
+| 并发模型                        | 适用服务                                                                               | 说明                                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **异步多线程 (epoll + 线程池)** | RPCGateway, ServiceRegistry, ConfigCenter, TracingService, MonitorService, CertService | 高并发网络 I/O 服务，使用 Boost.Asio epoll 事件驱动 + 多线程 worker 池，支撑数万并发连接            |
+| **异步 I/O + CPU 线程池**       | ImageService, SearchService                                                            | 混合型服务：异步接收网络请求，CPU 密集型任务（图片处理/搜索排序）交由独立线程池并行处理             |
+| **单线程事件循环**              | AdminConsole, ServiceConsole                                                           | 管理面板服务，连接数少（< 100）、操作频率低，单线程 Boost.Asio 事件循环即可满足需求，避免多线程竞态 |
+| **goroutine 协程**              | ArticleService, BlogService, VideoService (Go)                                         | Go 语言原生 goroutine 轻量级并发，适合 I/O 密集型 CRUD 和任务调度                                   |
+| **异步多线程 (tokio)**          | UserService, SecurityService (Rust)                                                    | Rust tokio 运行时异步多线程，内存安全 + 高性能，适合安全敏感服务                                    |
 
 ### 端口规划说明
 
-| 端口范围 | 服务类型 | 说明 |
-|---------|---------|------|
-| 50051–50058 | 业务微服务 | 网关 + 7 个业务服务（User/Article/Blog/Image/Video/Search/Database） |
+| 端口范围    | 服务类型        | 说明                                                                           |
+| ----------- | --------------- | ------------------------------------------------------------------------------ |
+| 50051–50058 | 业务微服务      | 网关 + 7 个业务服务（User/Article/Blog/Image/Video/Search/Database）           |
 | 51051–51058 | 核心框架 + 安全 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService + CertService |
-| 60907 | 前端 | Vue 3 开发服务器 |
+| 60907       | 前端            | Vue 3 开发服务器                                                               |
 
 ---
 
@@ -406,11 +384,11 @@ WebServer/                              # 总仓库（Git 根仓库）
 
 #### 🔷 RPCGateway — 网关服务
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 50051 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明          |
+| ------------ | ------------- |
+| **语言**     | C++17         |
+| **端口**     | 50051         |
+| **优先级**   | ✅ 核心       |
 | **代码仓库** | `RPCGateway/` |
 
 RPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换（HTTP↔Protobuf）、路由分发、令牌桶限流、Token 鉴权、**TLS termination**。基于 C++ epoll 事件驱动，单机支撑数万并发。TLS 证书由 CertService 独立分发，启动时调用 `DistributeCert` 获取。
@@ -419,11 +397,11 @@ RPCGateway 是整个微服务架构的**流量枢纽**。职责：协议转换�
 
 #### 🔷 ServiceRegistry — 服务注册发现
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51051 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明               |
+| ------------ | ------------------ |
+| **语言**     | C++17              |
+| **端口**     | 51051              |
+| **优先级**   | ✅ 核心            |
 | **代码仓库** | `ServiceRegistry/` |
 
 ServiceRegistry 维护着整个集群的**动态服务注册表**。服务启动时注册实例并定期心跳续约，超时自动剔除。支持加权轮询/最小连接数负载均衡，`Watch` 接口实时推送上下线事件，实现无硬编码的服务动态发现与优雅上下线。
@@ -432,11 +410,11 @@ ServiceRegistry 维护着整个集群的**动态服务注册表**。服务启动
 
 #### 🔷 ConfigCenter — 配置中心
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51052 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明            |
+| ------------ | --------------- |
+| **语言**     | C++17           |
+| **端口**     | 51052           |
+| **优先级**   | ✅ 核心         |
 | **代码仓库** | `ConfigCenter/` |
 
 ConfigCenter 解决配置管理的三大痛点：**散落、需重启、难追溯**。所有配置项集中存储，`WatchConfig` 实时推送变更实现热更新无需重启，`GetConfigHistory` 提供版本审计轨迹支持回滚。按服务名+配置键两层命名空间隔离，避免冲突。
@@ -445,11 +423,11 @@ ConfigCenter 解决配置管理的三大痛点：**散落、需重启、难追�
 
 #### 🔷 TracingService — 链路追踪
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51053 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明              |
+| ------------ | ----------------- |
+| **语言**     | C++17             |
+| **端口**     | 51053             |
+| **优先级**   | ✅ 核心           |
 | **代码仓库** | `TracingService/` |
 
 TracingService 实现基于 **Google Dapper** 的分布式链路追踪。每个请求生成全局 TraceID 串联各服务 Span，支持按 TraceID 精确检索调用链、按条件搜索慢请求。`GetServiceMap` 自动构建服务依赖拓扑图，直观展示调用关系和流量大小，是故障排查利器。
@@ -458,11 +436,11 @@ TracingService 实现基于 **Google Dapper** 的分布式链路追踪。每个�
 
 #### 🔷 MonitorService — 监控告警
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51054 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明              |
+| ------------ | ----------------- |
+| **语言**     | C++17             |
+| **端口**     | 51054             |
+| **优先级**   | ✅ 核心           |
 | **代码仓库** | `MonitorService/` |
 
 MonitorService 是微服务架构的 **"体检中心"**。采集 CPU/内存/QPS/P99 延迟等指标，支持配置告警规则（如错误率连续 5 分钟超 5% 触发通知），多渠道推送（邮件/钉钉/企微）。`GetServiceHealth` 一键健康检查，数据对接 Grafana 实现可视化运维监控。
@@ -473,11 +451,11 @@ MonitorService 是微服务架构的 **"体检中心"**。采集 CPU/内存/QPS/
 
 #### 🟦 AdminConsole — 内部管理面板
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51055 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明            |
+| ------------ | --------------- |
+| **语言**     | C++17           |
+| **端口**     | 51055           |
+| **优先级**   | ✅ 核心         |
 | **代码仓库** | `AdminConsole/` |
 
 AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治理（路由/限流/实例上下线）、系统监控（CPU/内存/QPS 仪表盘）、配置管理（可视化编辑+热更新）、链路追踪（TraceID 搜索+瀑布图）、告警管理（规则配置+处理记录）。独立 Web UI，Protobuf 直连核心服务，操作全审计。
@@ -488,11 +466,11 @@ AdminConsole 是面向**运维人员**的管控中心。五大模块：服务治
 
 #### 🟦 ServiceConsole — 业务管理面板
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51056 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明              |
+| ------------ | ----------------- |
+| **语言**     | C++17             |
+| **端口**     | 51056             |
+| **优先级**   | ✅ 核心           |
 | **代码仓库** | `ServiceConsole/` |
 
 ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用户管理（角色权限/封禁解封）、内容审核（文章/博客/图片/视频审核队列）、运营统计（用户增长/内容产出/互动数据图表）。独立 Web UI，Protobuf 直连业务微服务，操作同步审计日志。
@@ -505,12 +483,12 @@ ServiceConsole 是面向**运营人员**的业务管控台。三大模块：用�
 
 #### 🟥 SecurityService — 加密安全服务
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | Rust（基于 `ring`、`rustls`、`tonic` 加密库） |
-| **端口** | 51057 |
-| **优先级** | ✅ 核心 |
-| **代码仓库** | `SecurityService/` |
+| 属性         | 说明                                          |
+| ------------ | --------------------------------------------- |
+| **语言**     | Rust（基于 `ring`、`rustls`、`tonic` 加密库） |
+| **端口**     | 51057                                         |
+| **优先级**   | ✅ 核心                                       |
+| **代码仓库** | `SecurityService/`                            |
 
 SecurityService 是整个架构的**安全基石**，选择 Rust 保障内存安全。四大模块：**数据加密**（AES-256-GCM 对称 + RSA/ECIES 非对称）、**数字签名**（Ed25519/ECDSA，90 天密钥轮换）、**密钥管理**（全生命周期自动轮换，旧密钥保留 180 天）、**审计日志**。
 
@@ -518,11 +496,11 @@ SecurityService 是整个架构的**安全基石**，选择 Rust 保障内存安
 
 #### 🟨 CertService — 证书分发服务
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 51058 |
-| **优先级** | ✅ 核心 |
+| 属性         | 说明           |
+| ------------ | -------------- |
+| **语言**     | C++17          |
+| **端口**     | 51058          |
+| **优先级**   | ✅ 核心        |
 | **代码仓库** | `CertService/` |
 
 CertService 是独立的 **SSL/TLS 证书分发微服务**，Proto 接口定义于 `proto/source/cert/cert_service.proto`。作为内部 CA 为 RPCGateway 及所有微服务统一签发、续期、吊销 mTLS 证书，每个服务启动时独立调用 `DistributeCert` 获取。支持 ACME 协议对接 Let's Encrypt 自动获取公网证书，自动生成 Nginx SSL 配置文件和 `nginx.conf`。证书 7 天短生命周期，到期前 24h 自动续期，支持 CRL 吊销。
@@ -533,11 +511,11 @@ CertService 是独立的 **SSL/TLS 证书分发微服务**，Proto 接口定义�
 
 #### UserService — 用户服务（Rust）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | Rust |
-| **端口** | 50052 |
-| **类型** | 安全敏感型 |
+| 属性         | 说明           |
+| ------------ | -------------- |
+| **语言**     | Rust           |
+| **端口**     | 50052          |
+| **类型**     | 安全敏感型     |
 | **代码仓库** | `UserService/` |
 
 UserService 是平台的**用户认证中心**。Rust 保障密码哈希/Token 签发的内存安全。核心：bcrypt 密码存储、JWT Token 签发、`VerifyToken` 供网关鉴权、RBAC 权限模型、多设备管理。敏感字段（手机号/邮箱）存储前经 SecurityService 加密。
@@ -546,11 +524,11 @@ UserService 是平台的**用户认证中心**。Rust 保障密码哈希/Token �
 
 #### ArticleService — 文章服务（Go）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | Go |
-| **端口** | 50053 |
-| **类型** | I/O 密集型 CRUD |
+| 属性         | 说明              |
+| ------------ | ----------------- |
+| **语言**     | Go                |
+| **端口**     | 50053             |
+| **类型**     | I/O 密集型 CRUD   |
 | **代码仓库** | `ArticleService/` |
 
 ArticleService 是 **CMS 核心**（Go 实现）。Go goroutine 轻松应对文章 CRUD 的大量数据库并发读写。支持多级分类+标签组织文章，分页过滤查询，Redis 原子自增统计阅读量。服务端 Markdown 渲染防 XSS，敏感数据经 SecurityService 加密存储。
@@ -559,12 +537,12 @@ ArticleService 是 **CMS 核心**（Go 实现）。Go goroutine 轻松应对文�
 
 #### BlogService — 博客服务（Go）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | Go |
-| **端口** | 50054 |
-| **类型** | I/O 密集型 CRUD + 社交互动 |
-| **代码仓库** | `BlogService/` |
+| 属性         | 说明                       |
+| ------------ | -------------------------- |
+| **语言**     | Go                         |
+| **端口**     | 50054                      |
+| **类型**     | I/O 密集型 CRUD + 社交互动 |
+| **代码仓库** | `BlogService/`             |
 
 BlogService 提供**社交化博客平台**（Go 实现）。goroutine 高效处理并发互动：嵌套评论（楼中楼）、点赞（Redis Set 防重复）、个性化推荐（阅读历史+标签+作者偏好）。消息队列异步写入高并发数据，敏感操作经 UserService 鉴权。
 
@@ -572,11 +550,11 @@ BlogService 提供**社交化博客平台**（Go 实现）。goroutine 高效处
 
 #### ImageService — 图片服务（C++）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 50055 |
-| **类型** | 计算密集型 |
+| 属性         | 说明            |
+| ------------ | --------------- |
+| **语言**     | C++17           |
+| **端口**     | 50055           |
+| **类型**     | 计算密集型      |
 | **代码仓库** | `ImageService/` |
 
 ImageService 是**高性能图片处理引擎**（C++ 实现）。C++ 直接调用 SIMD/GPU 加速像素级操作。支持客户端流式上传、多尺寸缩略图（128~1024px）、格式转换（JPEG/PNG/WebP/AVIF）。线程池并行批量处理，沙箱进程隔离防恶意图片攻击。
@@ -585,12 +563,12 @@ ImageService 是**高性能图片处理引擎**（C++ 实现）。C++ 直接调�
 
 #### VideoService — 视频服务（Go）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | Go |
-| **端口** | 50056 |
-| **类型** | 任务调度 I/O 密集型 |
-| **代码仓库** | `VideoService/` |
+| 属性         | 说明                |
+| ------------ | ------------------- |
+| **语言**     | Go                  |
+| **端口**     | 50056               |
+| **类型**     | 任务调度 I/O 密集型 |
+| **代码仓库** | `VideoService/`     |
 
 VideoService 是**视频处理调度中心**（Go 实现）。Go goroutine+Channel 管理 FFmpeg 转码任务队列。异步流程：流式上传→FFmpeg 多格式多分辨率转码→HLS 切片分发（.m3u8+.ts）。Redis Pub/Sub 实时推送转码进度，敏感信息调用 SecurityService 加密。
 
@@ -598,12 +576,12 @@ VideoService 是**视频处理调度中心**（Go 实现）。Go goroutine+Chann
 
 #### SearchService — 搜索服务（C++）
 
-| 属性 | 说明 |
-|------|------|
-| **语言** | C++17 |
-| **端口** | 50057 |
-| **类型** | 计算密集型 + ES 集成 |
-| **代码仓库** | `SearchService/` |
+| 属性         | 说明                 |
+| ------------ | -------------------- |
+| **语言**     | C++17                |
+| **端口**     | 50057                |
+| **类型**     | 计算密集型 + ES 集成 |
+| **代码仓库** | `SearchService/`     |
 
 SearchService 是**搜索引擎上层封装**（C++ 实现）。C++ 层处理查询解析和排序算法，ES 仅做索引检索，减少网络开销。支持多字段全文检索、布尔/短语/模糊查询、TF-IDF+业务权重混合排序、前缀匹配搜索建议。按类型重建索引+增量同步。
 
@@ -613,38 +591,38 @@ SearchService 是**搜索引擎上层封装**（C++ 实现）。C++ 层处理查
 
 #### Vue 3 前端
 
-| 属性 | 说明 |
-|------|------|
-| **技术栈** | Vue 3 + TypeScript + HTTP/JSON |
-| **端口** | 60907 |
-| **代码仓库** | `vue/` |
+| 属性         | 说明                           |
+| ------------ | ------------------------------ |
+| **技术栈**   | Vue 3 + TypeScript + HTTP/JSON |
+| **端口**     | 60907                          |
+| **代码仓库** | `vue/`                         |
 
 Vue 3 前端是用户端 Web 应用。Vue 3 + TypeScript 构建，通过 **HTTP/JSON** 与网关通信。protoc 编译生成 TypeScript 类型，保证前后端接口一致性。提供文章/博客/图片/视频浏览和用户登录注册等完整体验。
 
 #### iOS App（Swift）
 
-| 属性 | 说明 |
-|------|------|
-| **技术栈** | Swift + TCP/Protobuf |
-| **代码仓库** | `mobile/ios/` |
+| 属性         | 说明                 |
+| ------------ | -------------------- |
+| **技术栈**   | Swift + TCP/Protobuf |
+| **代码仓库** | `mobile/ios/`        |
 
 iOS 原生 App 使用 Swift + SwiftUI 开发，Protobuf 序列化通过 TCP 连接网关通信。核心页面：内容信息流、文章/博客详情、图片画廊、视频播放、用户中心。响应式 UI 跨设备适配。
 
 #### Android App（Kotlin）
 
-| 属性 | 说明 |
-|------|------|
-| **技术栈** | Kotlin + TCP/Protobuf |
-| **代码仓库** | `mobile/android/` |
+| 属性         | 说明                  |
+| ------------ | --------------------- |
+| **技术栈**   | Kotlin + TCP/Protobuf |
+| **代码仓库** | `mobile/android/`     |
 
 Android 原生 App 使用 Kotlin + Jetpack Compose 开发，Protobuf 序列化通过 TCP 连接网关通信。功能覆盖与 iOS 一致，确保跨平台用户体验统一。两者均通过 SecurityService 加密敏感通信数据。
 
 #### Qt Desktop App（C++）
 
-| 属性 | 说明 |
-|------|------|
-| **技术栈** | Qt 6 + C++17 + TCP/Protobuf |
-| **代码仓库** | `desktop/` |
+| 属性         | 说明                        |
+| ------------ | --------------------------- |
+| **技术栈**   | Qt 6 + C++17 + TCP/Protobuf |
+| **代码仓库** | `desktop/`                  |
 
 Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protobuf 序列化通过 TCP 直连网关通信。支持 Windows/macOS/Linux 三平台，硬件加速渲染（OpenGL/Vulkan），提供内容信息流、文章/博客详情、图片画廊、视频播放、用户中心等完整功能。独立可执行文件分发，支持 AppImage/DMG/NSIS 等安装包格式。
 
@@ -656,64 +634,64 @@ Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protob
 
 对外统一入口，负责 HTTP/Protobuf 协议转换、路由分发、限流控制、鉴权验证。
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `RouteRequest` | service_name, method_name, payload, metadata | status_code, data, error_message | 路由请求到后端微服务 |
-| `HttpToRpc` | method, path, headers, body, query_params | status_code, headers, body | HTTP 协议转 RPC |
-| `RateLimit` | client_ip, api_path, request_count | allowed, remaining_quota, reset_time_seconds | 限流控制 |
-| `Authenticate` | token, service_name, method_name | authenticated, user_id, permissions | 鉴权验证 |
+| RPC            | 请求                                         | 响应                                         | 说明                 |
+| -------------- | -------------------------------------------- | -------------------------------------------- | -------------------- |
+| `RouteRequest` | service_name, method_name, payload, metadata | status_code, data, error_message             | 路由请求到后端微服务 |
+| `HttpToRpc`    | method, path, headers, body, query_params    | status_code, headers, body                   | HTTP 协议转 RPC      |
+| `RateLimit`    | client_ip, api_path, request_count           | allowed, remaining_quota, reset_time_seconds | 限流控制             |
+| `Authenticate` | token, service_name, method_name             | authenticated, user_id, permissions          | 鉴权验证             |
 
 ### ServiceRegistry — 服务注册发现（C++，端口:51051）
 
 动态路由、负载均衡、健康检查、服务上下线通知。
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `Register` | service_name, instance_id, host, port, metadata | success, ttl_seconds | 服务注册 |
-| `Unregister` | service_name, instance_id | success, message | 服务注销 |
-| `Heartbeat` | service_name, instance_id | success, ttl_seconds | 心跳续约 |
-| `Discover` | service_name | instances[] (host, port, metadata, status) | 服务发现 |
-| `Watch` | service_name | stream<event_type, instance> | 服务变更监听（服务端流） |
-| `HealthCheck` | service_name, instance_id | status, last_heartbeat | 健康检查 |
-| `ListServices` | Empty | services[] (service_name, instance_count) | 获取所有服务列表 |
+| RPC            | 请求                                            | 响应                                       | 说明                     |
+| -------------- | ----------------------------------------------- | ------------------------------------------ | ------------------------ |
+| `Register`     | service_name, instance_id, host, port, metadata | success, ttl_seconds                       | 服务注册                 |
+| `Unregister`   | service_name, instance_id                       | success, message                           | 服务注销                 |
+| `Heartbeat`    | service_name, instance_id                       | success, ttl_seconds                       | 心跳续约                 |
+| `Discover`     | service_name                                    | instances[] (host, port, metadata, status) | 服务发现                 |
+| `Watch`        | service_name                                    | stream<event_type, instance>               | 服务变更监听（服务端流） |
+| `HealthCheck`  | service_name, instance_id                       | status, last_heartbeat                     | 健康检查                 |
+| `ListServices` | Empty                                           | services[] (service_name, instance_count)  | 获取所有服务列表         |
 
 ### ConfigCenter — 配置中心（C++，端口:51052）
 
 统一配置管理、热更新、配置版本控制。
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `GetConfig` | service_name, config_key | config_value, version, updated_at | 获取配置 |
-| `SetConfig` | service_name, config_key, config_value | version, success | 设置配置 |
-| `DeleteConfig` | service_name, config_key | success, message | 删除配置 |
-| `WatchConfig` | service_name, config_key | stream<config_key, config_value, version> | 配置变更监听（服务端流） |
-| `ListConfigs` | service_name | configs[] (config_key, config_value, version) | 获取服务所有配置 |
-| `GetConfigHistory` | service_name, config_key | history[] (version, config_value, updated_at, updated_by) | 配置变更历史 |
+| RPC                | 请求                                   | 响应                                                      | 说明                     |
+| ------------------ | -------------------------------------- | --------------------------------------------------------- | ------------------------ |
+| `GetConfig`        | service_name, config_key               | config_value, version, updated_at                         | 获取配置                 |
+| `SetConfig`        | service_name, config_key, config_value | version, success                                          | 设置配置                 |
+| `DeleteConfig`     | service_name, config_key               | success, message                                          | 删除配置                 |
+| `WatchConfig`      | service_name, config_key               | stream<config_key, config_value, version>                 | 配置变更监听（服务端流） |
+| `ListConfigs`      | service_name                           | configs[] (config_key, config_value, version)             | 获取服务所有配置         |
+| `GetConfigHistory` | service_name, config_key               | history[] (version, config_value, updated_at, updated_by) | 配置变更历史             |
 
 ### TracingService — 链路追踪（C++，端口:51053）
 
 请求全链路跟踪、性能分析、故障排查。
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `ReportSpan` | trace_id, span_id, parent_span_id, service_name, method_name, start_time, end_time, status, tags | success | 上报 Span |
-| `QueryTrace` | trace_id | spans[] (span_id, service_name, method_name, duration, status) | 查询链路 |
-| `SearchTraces` | service_name, method_name, start_time, end_time, min_duration, max_duration, status | traces[] (trace_id, root_service, duration, span_count) | 搜索链路 |
-| `GetServiceMap` | Empty | services[] (service_name, dependencies[]) | 获取服务依赖拓扑图 |
-| `GetSlowTraces` | service_name, min_duration, limit | traces[] (trace_id, duration, method_name) | 获取慢请求链路 |
+| RPC             | 请求                                                                                             | 响应                                                           | 说明               |
+| --------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | ------------------ |
+| `ReportSpan`    | trace_id, span_id, parent_span_id, service_name, method_name, start_time, end_time, status, tags | success                                                        | 上报 Span          |
+| `QueryTrace`    | trace_id                                                                                         | spans[] (span_id, service_name, method_name, duration, status) | 查询链路           |
+| `SearchTraces`  | service_name, method_name, start_time, end_time, min_duration, max_duration, status              | traces[] (trace_id, root_service, duration, span_count)        | 搜索链路           |
+| `GetServiceMap` | Empty                                                                                            | services[] (service_name, dependencies[])                      | 获取服务依赖拓扑图 |
+| `GetSlowTraces` | service_name, min_duration, limit                                                                | traces[] (trace_id, duration, method_name)                     | 获取慢请求链路     |
 
 ### MonitorService — 监控告警（C++，端口:51054）
 
 指标采集、告警规则、可视化面板。
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `ReportMetric` | service_name, metric_name, value, tags, timestamp | success | 上报指标 |
-| `QueryMetric` | service_name, metric_name, start_time, end_time, aggregation | data_points[] (timestamp, value) | 查询指标 |
-| `SetAlertRule` | rule_name, metric_name, condition, threshold, duration, notify_channels | rule_id, success | 设置告警规则 |
-| `ListAlertRules` | service_name | rules[] (rule_id, rule_name, metric_name, condition, threshold) | 获取告警规则列表 |
-| `GetAlerts` | service_name, start_time, end_time, status | alerts[] (alert_id, rule_name, metric_value, triggered_at, status) | 获取告警历史 |
-| `GetServiceHealth` | service_name | status, metrics[] (metric_name, value, status) | 获取服务健康状态 |
+| RPC                | 请求                                                                    | 响应                                                               | 说明             |
+| ------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------- |
+| `ReportMetric`     | service_name, metric_name, value, tags, timestamp                       | success                                                            | 上报指标         |
+| `QueryMetric`      | service_name, metric_name, start_time, end_time, aggregation            | data_points[] (timestamp, value)                                   | 查询指标         |
+| `SetAlertRule`     | rule_name, metric_name, condition, threshold, duration, notify_channels | rule_id, success                                                   | 设置告警规则     |
+| `ListAlertRules`   | service_name                                                            | rules[] (rule_id, rule_name, metric_name, condition, threshold)    | 获取告警规则列表 |
+| `GetAlerts`        | service_name, start_time, end_time, status                              | alerts[] (alert_id, rule_name, metric_value, triggered_at, status) | 获取告警历史     |
+| `GetServiceHealth` | service_name                                                            | status, metrics[] (metric_name, value, status)                     | 获取服务健康状态 |
 
 ---
 
@@ -725,30 +703,31 @@ Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protob
 
 ### 数据加密 — 保护业务敏感数据
 
-| RPC | 请求 | 响应 | 说明 | 算法 |
-|-----|------|------|------|------|
-| `Encrypt` | plaintext, encryption_key_id, aad | ciphertext, iv, tag, key_id | 对称加密 | AES-256-GCM（带附加认证数据 AAD） |
-| `Decrypt` | ciphertext, iv, tag, encryption_key_id, aad | plaintext | 对称解密 | AES-256-GCM |
-| `AsymmetricEncrypt` | plaintext, public_key_id | ciphertext, key_id | 非对称加密 | RSA-OAEP（兼容）/ ECIES（性能优先） |
-| `AsymmetricDecrypt` | ciphertext, private_key_id | plaintext, key_id | 非对称解密 | RSA-OAEP / ECIES |
-| `HashData` | data, algorithm | hash, algorithm | 数据哈希 | SHA-256 / SHA-3（可配置） |
-| `Hmac` | data, secret_key_id, algorithm | hmac, algorithm | 消息认证码 | HMAC-SHA256 / HMAC-SHA3 |
+| RPC                 | 请求                                        | 响应                        | 说明       | 算法                                |
+| ------------------- | ------------------------------------------- | --------------------------- | ---------- | ----------------------------------- |
+| `Encrypt`           | plaintext, encryption_key_id, aad           | ciphertext, iv, tag, key_id | 对称加密   | AES-256-GCM（带附加认证数据 AAD）   |
+| `Decrypt`           | ciphertext, iv, tag, encryption_key_id, aad | plaintext                   | 对称解密   | AES-256-GCM                         |
+| `AsymmetricEncrypt` | plaintext, public_key_id                    | ciphertext, key_id          | 非对称加密 | RSA-OAEP（兼容）/ ECIES（性能优先） |
+| `AsymmetricDecrypt` | ciphertext, private_key_id                  | plaintext, key_id           | 非对称解密 | RSA-OAEP / ECIES                    |
+| `HashData`          | data, algorithm                             | hash, algorithm             | 数据哈希   | SHA-256 / SHA-3（可配置）           |
+| `Hmac`              | data, secret_key_id, algorithm              | hmac, algorithm             | 消息认证码 | HMAC-SHA256 / HMAC-SHA3             |
 
 ### 数字签名 — 保障数据完整性与不可否认性
 
-| RPC | 请求 | 响应 | 说明 | 算法 |
-|-----|------|------|------|------|
-| `Sign` | data, signing_key_id, algorithm | signature, key_id, algorithm | 数字签名 | Ed25519（性能优先）/ ECDSA P-256（兼容优先） |
-| `Verify` | data, signature, public_key_id, algorithm | valid, key_id | 签名验证 | Ed25519 / ECDSA P-256 |
+| RPC      | 请求                                      | 响应                         | 说明     | 算法                                         |
+| -------- | ----------------------------------------- | ---------------------------- | -------- | -------------------------------------------- |
+| `Sign`   | data, signing_key_id, algorithm           | signature, key_id, algorithm | 数字签名 | Ed25519（性能优先）/ ECDSA P-256（兼容优先） |
+| `Verify` | data, signature, public_key_id, algorithm | valid, key_id                | 签名验证 | Ed25519 / ECDSA P-256                        |
 
 ### 密钥管理 — 密钥全生命周期安全管控
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `GenerateKey` | key_type, key_size, metadata | key_id, public_key, created_at | 生成密钥对（支持对称/非对称/签名密钥） |
-| `RotateKey` | key_id | new_key_id, rotated_at | 密钥轮换（旧密钥标记为只解密，新密钥用于加密） |
+| RPC           | 请求                         | 响应                           | 说明                                           |
+| ------------- | ---------------------------- | ------------------------------ | ---------------------------------------------- |
+| `GenerateKey` | key_type, key_size, metadata | key_id, public_key, created_at | 生成密钥对（支持对称/非对称/签名密钥）         |
+| `RotateKey`   | key_id                       | new_key_id, rotated_at         | 密钥轮换（旧密钥标记为只解密，新密钥用于加密） |
 
 **密钥轮换策略**：
+
 - 数据加密密钥：每 30 天自动轮换
 - 签名密钥：每 90 天自动轮换
 - 密钥版本化：旧密钥保留 180 天用于解密历史数据
@@ -808,80 +787,80 @@ Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protob
 
 ### UserService — 用户服务（Rust，端口:50052）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `Register` | username, password, email | user_id, token, created_at | 用户注册 |
-| `Login` | username, password | token, user_info, expires_at | 用户登录 |
-| `Logout` | token, device_id | success, message | 注销登录 |
-| `GetUserInfo` | user_id | user_id, username, avatar, email, permission, created_at | 获取用户信息 |
-| `UpdateUserInfo` | user_id, username, avatar, email | success, message | 更新用户信息 |
-| `ListDevices` | user_id | devices[] | 获取登录设备列表 |
-| `RemoveDevice` | user_id, device_id | success, message | 移除登录设备 |
-| `VerifyToken` | token | valid, user_id, permissions | Token 验证 |
+| RPC              | 请求                             | 响应                                                     | 说明             |
+| ---------------- | -------------------------------- | -------------------------------------------------------- | ---------------- |
+| `Register`       | username, password, email        | user_id, token, created_at                               | 用户注册         |
+| `Login`          | username, password               | token, user_info, expires_at                             | 用户登录         |
+| `Logout`         | token, device_id                 | success, message                                         | 注销登录         |
+| `GetUserInfo`    | user_id                          | user_id, username, avatar, email, permission, created_at | 获取用户信息     |
+| `UpdateUserInfo` | user_id, username, avatar, email | success, message                                         | 更新用户信息     |
+| `ListDevices`    | user_id                          | devices[]                                                | 获取登录设备列表 |
+| `RemoveDevice`   | user_id, device_id               | success, message                                         | 移除登录设备     |
+| `VerifyToken`    | token                            | valid, user_id, permissions                              | Token 验证       |
 
 ### ArticleService — 文章服务（Go，端口:50053）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `CreateArticle` | title, content, category_id, tags[], author_id | article_id, created_at | 创建文章 |
-| `GetArticle` | article_id | article_id, title, content, category, tags[], author, created_at, updated_at, view_count | 获取文章详情 |
-| `UpdateArticle` | article_id, title, content, category_id, tags[] | success, updated_at | 更新文章 |
-| `DeleteArticle` | article_id | success, message | 删除文章 |
-| `ListArticles` | page, page_size, category_id, tag_id | articles[], total, page, page_size | 文章列表（分页） |
-| `GetCategories` | Empty | categories[] | 获取分类列表 |
-| `CreateCategory` | name, description | category_id, created_at | 创建分类 |
-| `GetTags` | Empty | tags[] | 获取标签列表 |
+| RPC              | 请求                                            | 响应                                                                                     | 说明             |
+| ---------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------- |
+| `CreateArticle`  | title, content, category_id, tags[], author_id  | article_id, created_at                                                                   | 创建文章         |
+| `GetArticle`     | article_id                                      | article_id, title, content, category, tags[], author, created_at, updated_at, view_count | 获取文章详情     |
+| `UpdateArticle`  | article_id, title, content, category_id, tags[] | success, updated_at                                                                      | 更新文章         |
+| `DeleteArticle`  | article_id                                      | success, message                                                                         | 删除文章         |
+| `ListArticles`   | page, page_size, category_id, tag_id            | articles[], total, page, page_size                                                       | 文章列表（分页） |
+| `GetCategories`  | Empty                                           | categories[]                                                                             | 获取分类列表     |
+| `CreateCategory` | name, description                               | category_id, created_at                                                                  | 创建分类         |
+| `GetTags`        | Empty                                           | tags[]                                                                                   | 获取标签列表     |
 
 ### BlogService — 博客服务（Go，端口:50054）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `CreatePost` | title, content, author_id, tags[] | post_id, created_at | 创建博客文章 |
-| `GetPost` | post_id | post_id, title, content, author, tags[], created_at, updated_at, like_count, comment_count | 获取博客详情 |
-| `UpdatePost` | post_id, title, content, tags[] | success, updated_at | 更新博客 |
-| `DeletePost` | post_id | success, message | 删除博客 |
-| `ListPosts` | page, page_size, tag_id, author_id | posts[], total | 博客列表（分页） |
-| `AddComment` | post_id, author_id, content | comment_id, created_at | 添加评论 |
-| `ListComments` | post_id, page, page_size | comments[], total | 评论列表 |
-| `DeleteComment` | comment_id, author_id | success, message | 删除评论 |
-| `LikePost` | post_id, user_id | success, like_count | 点赞博客 |
-| `UnlikePost` | post_id, user_id | success, like_count | 取消点赞 |
-| `GetRecommendations` | user_id, page, page_size | posts[], total | 博客推荐 |
+| RPC                  | 请求                               | 响应                                                                                       | 说明             |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ | ---------------- |
+| `CreatePost`         | title, content, author_id, tags[]  | post_id, created_at                                                                        | 创建博客文章     |
+| `GetPost`            | post_id                            | post_id, title, content, author, tags[], created_at, updated_at, like_count, comment_count | 获取博客详情     |
+| `UpdatePost`         | post_id, title, content, tags[]    | success, updated_at                                                                        | 更新博客         |
+| `DeletePost`         | post_id                            | success, message                                                                           | 删除博客         |
+| `ListPosts`          | page, page_size, tag_id, author_id | posts[], total                                                                             | 博客列表（分页） |
+| `AddComment`         | post_id, author_id, content        | comment_id, created_at                                                                     | 添加评论         |
+| `ListComments`       | post_id, page, page_size           | comments[], total                                                                          | 评论列表         |
+| `DeleteComment`      | comment_id, author_id              | success, message                                                                           | 删除评论         |
+| `LikePost`           | post_id, user_id                   | success, like_count                                                                        | 点赞博客         |
+| `UnlikePost`         | post_id, user_id                   | success, like_count                                                                        | 取消点赞         |
+| `GetRecommendations` | user_id, page, page_size           | posts[], total                                                                             | 博客推荐         |
 
 ### ImageService — 图片服务（C++，端口:50055）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `UploadImage` | stream<file_name, content, chunk_index, total_chunks> | image_id, url, thumbnail_url, size_bytes, format | 图片上传（客户端流） |
-| `GetImage` | image_id | image_id, url, thumbnail_url, format, width, height, size_bytes, created_at | 获取图片信息 |
-| `DeleteImage` | image_id | success, message | 删除图片 |
-| `ListImages` | user_id, page, page_size | images[], total | 图片列表 |
-| `ProcessImage` | image_id, operations[] | image_id, url, thumbnail_url | 图片处理 |
-| `GenerateThumbnail` | image_id, width, height | thumbnail_url | 生成缩略图 |
+| RPC                 | 请求                                                  | 响应                                                                        | 说明                 |
+| ------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- | -------------------- |
+| `UploadImage`       | stream<file_name, content, chunk_index, total_chunks> | image_id, url, thumbnail_url, size_bytes, format                            | 图片上传（客户端流） |
+| `GetImage`          | image_id                                              | image_id, url, thumbnail_url, format, width, height, size_bytes, created_at | 获取图片信息         |
+| `DeleteImage`       | image_id                                              | success, message                                                            | 删除图片             |
+| `ListImages`        | user_id, page, page_size                              | images[], total                                                             | 图片列表             |
+| `ProcessImage`      | image_id, operations[]                                | image_id, url, thumbnail_url                                                | 图片处理             |
+| `GenerateThumbnail` | image_id, width, height                               | thumbnail_url                                                               | 生成缩略图           |
 
 ### VideoService — 视频服务（Go，端口:50056）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `UploadVideo` | stream<file_name, content, chunk_index, total_chunks> | video_id, status | 视频上传（客户端流） |
-| `GetVideoInfo` | video_id | video_id, title, url, duration, format, resolution, size_bytes, status, created_at | 获取视频信息 |
-| `DeleteVideo` | video_id | success, message | 删除视频 |
-| `ListVideos` | user_id, page, page_size | videos[], total | 视频列表 |
-| `StartTranscoding` | video_id, target_formats[], resolutions[] | job_id, status | 启动转码任务 |
-| `GetTranscodingStatus` | job_id | job_id, status, progress, output_formats[] | 查询转码进度 |
-| `GetStreamUrl` | video_id, format, resolution | stream_url, expires_at | 获取流媒体播放地址 |
-| `GetVideoChunk` | video_id, chunk_index, format, resolution | stream<content, chunk_index, total_chunks> | 获取视频切片（服务端流） |
+| RPC                    | 请求                                                  | 响应                                                                               | 说明                     |
+| ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------ |
+| `UploadVideo`          | stream<file_name, content, chunk_index, total_chunks> | video_id, status                                                                   | 视频上传（客户端流）     |
+| `GetVideoInfo`         | video_id                                              | video_id, title, url, duration, format, resolution, size_bytes, status, created_at | 获取视频信息             |
+| `DeleteVideo`          | video_id                                              | success, message                                                                   | 删除视频                 |
+| `ListVideos`           | user_id, page, page_size                              | videos[], total                                                                    | 视频列表                 |
+| `StartTranscoding`     | video_id, target_formats[], resolutions[]             | job_id, status                                                                     | 启动转码任务             |
+| `GetTranscodingStatus` | job_id                                                | job_id, status, progress, output_formats[]                                         | 查询转码进度             |
+| `GetStreamUrl`         | video_id, format, resolution                          | stream_url, expires_at                                                             | 获取流媒体播放地址       |
+| `GetVideoChunk`        | video_id, chunk_index, format, resolution             | stream<content, chunk_index, total_chunks>                                         | 获取视频切片（服务端流） |
 
 ### SearchService — 搜索服务（C++，端口:50057）
 
-| RPC | 请求 | 响应 | 说明 |
-|-----|------|------|------|
-| `Search` | query, type, page, page_size, filters | results[], total, elapsed_ms | 全文搜索 |
-| `IndexDocument` | document_id, type, title, content, tags[], metadata | success, indexed_at | 索引文档 |
-| `RemoveIndex` | document_id, type | success, message | 移除索引 |
-| `RebuildIndex` | type | job_id, status | 重建索引 |
-| `GetSearchSuggestions` | prefix, type, limit | suggestions[] | 搜索建议 |
-| `GetTrendingSearches` | limit | trending[] | 热门搜索 |
+| RPC                    | 请求                                                | 响应                         | 说明     |
+| ---------------------- | --------------------------------------------------- | ---------------------------- | -------- |
+| `Search`               | query, type, page, page_size, filters               | results[], total, elapsed_ms | 全文搜索 |
+| `IndexDocument`        | document_id, type, title, content, tags[], metadata | success, indexed_at          | 索引文档 |
+| `RemoveIndex`          | document_id, type                                   | success, message             | 移除索引 |
+| `RebuildIndex`         | type                                                | job_id, status               | 重建索引 |
+| `GetSearchSuggestions` | prefix, type, limit                                 | suggestions[]                | 搜索建议 |
+| `GetTrendingSearches`  | limit                                               | trending[]                   | 热门搜索 |
 
 ---
 
@@ -889,16 +868,16 @@ Qt Desktop App 是高性能桌面客户端，使用 Qt 6 + C++17 开发，Protob
 
 ### 前置依赖
 
-| 组件 | 版本要求 | 说明 |
-|------|----------|------|
-| C++ 编译器 | C++17（GCC 8+ / MSVC 2019+） | 核心框架编译 |
-| CMake | 3.10+ | C++ 构建系统 |
-| Boost | 1.83+（已包含在仓库中） | C++ 微服务依赖（Beast/Asio/JSON/Algorithm），header-only 无需单独编译 |
-| MySQL | 8.0+ | 数据库 |
-| Protobuf | 3.15+ | 序列化协议（protoc 编译器） |
-| Rust | 1.70+ | UserService（安全敏感认证服务）、SecurityService（加密安全服务） |
-| Go | 1.21+ | ArticleService、BlogService、VideoService（I/O 密集型服务） |
-| Node.js | 18+ | 前端构建 |
+| 组件       | 版本要求                     | 说明                                                                  |
+| ---------- | ---------------------------- | --------------------------------------------------------------------- |
+| C++ 编译器 | C++17（GCC 8+ / MSVC 2019+） | 核心框架编译                                                          |
+| CMake      | 3.10+                        | C++ 构建系统                                                          |
+| Boost      | 1.83+（已包含在仓库中）      | C++ 微服务依赖（Beast/Asio/JSON/Algorithm），header-only 无需单独编译 |
+| MySQL      | 8.0+                         | 数据库                                                                |
+| Protobuf   | 3.15+                        | 序列化协议（protoc 编译器）                                           |
+| Rust       | 1.70+                        | UserService（安全敏感认证服务）、SecurityService（加密安全服务）      |
+| Go         | 1.21+                        | ArticleService、BlogService、VideoService（I/O 密集型服务）           |
+| Node.js    | 18+                          | 前端构建                                                              |
 
 ### 1️⃣ 克隆仓库
 
@@ -911,6 +890,7 @@ git submodule update --init --recursive
 > **关于 Boost 库**：`boost/` 目录已直接包含在仓库中（header-only 模式），所有 C++ 微服务（RPCGateway、ServiceRegistry、ConfigCenter、TracingService、MonitorService、AdminConsole、ServiceConsole、ImageService、SearchService、CertService）均依赖此 Boost 库。
 >
 > 核心依赖组件：
+>
 > - **Boost.Beast** — HTTP/WebSocket 协议实现，用于 RPCGateway 的 HTTP 协议转换
 > - **Boost.Asio** — 异步网络 I/O 框架，所有 C++ 微服务的网络通信基础
 > - **Boost.JSON** — JSON 解析与序列化，用于配置解析和日志格式化
@@ -982,6 +962,7 @@ proto/
         ├── go/                      # Go 生成代码
         └── rust/                    # Rust 生成代码
 ```
+
 PS:所有公共的服务如多线程将统一放于RPCGateway子仓库里，其他文件编译时将会读取补齐。
 
 #### 生成 C++ 代码（核心框架）
@@ -1053,6 +1034,7 @@ echo "🎉 所有语言代码生成完成！"
 ```
 
 > **注意**：
+>
 > - protoc 只生成序列化代码（`.pb.h` / `.pb.go` / `.rs`），**不生成 RPC 通信骨架**
 > - 服务间通信的 RPC 框架由各服务自行实现 TCP 帧协议 + 方法路由
 > - 生成代码通常不提交到 Git 仓库，而是在 CI/CD 构建流程中自动生成
@@ -1165,35 +1147,36 @@ cd vue && npm install && npm run dev
 ### 服务器端口
 
 #### 端口分配原则
-| 端口范围 | 服务类型 | 说明 |
-|---------|---------|------|
-| 50051–50057 | 业务微服务端口 | 网关 + 6 个业务服务 |
+
+| 端口范围    | 服务类型            | 说明                                                             |
+| ----------- | ------------------- | ---------------------------------------------------------------- |
+| 50051–50057 | 业务微服务端口      | 网关 + 6 个业务服务                                              |
 | 51051–51057 | 核心框架 + 安全端口 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService |
-| 60907 | 前端端口 | Vue 3 开发服务器 |
-| 9200 | 搜索引擎 | Elasticsearch |
+| 60907       | 前端端口            | Vue 3 开发服务器                                                 |
+| 9200        | 搜索引擎            | Elasticsearch                                                    |
 
 #### 端口明细
 
-| 服务 | 语言 | 端口 | 类型 | 所属层级 |
-|------|------|------|------|---------|
-| RPCGateway | C++ | 50051 | 核心框架 | 网关层 |
-| ServiceRegistry | C++ | 51051 | 核心框架 | 基础设施层 |
-| ConfigCenter | C++ | 51052 | 核心框架 | 基础设施层 |
-| TracingService | C++ | 51053 | 核心框架 | 可观测性层 |
-| MonitorService | C++ | 51054 | 核心框架 | 可观测性层 |
-| AdminConsole | C++ | 51055 | 核心框架 | 管理面板层 |
-| ServiceConsole | C++ | 51056 | 核心框架 | 管理面板层 |
-| SecurityService | Rust | 51057 | 安全服务 🔐 | 安全层 |
-| CertService | C++ | 51058 | 证书服务 🔐 | 安全层 |
-| UserService | Rust | 50052 | 业务服务 | 业务层 |
-| ArticleService | Go | 50053 | 业务服务 | 业务层 |
-| BlogService | Go | 50054 | 业务服务 | 业务层 |
-| ImageService | C++ | 50055 | 业务服务 | 业务层 |
-| VideoService | Go | 50056 | 业务服务 | 业务层 |
-| SearchService | C++ | 50057 | 业务服务 | 业务层 |
-| MySQL | C++ | 50058 | 业务服务 | 数据层 |
-| Vue 前端 | JS | 60907 | 前端 | 前端层 |
-| Elasticsearch | Java | 9200 | 搜索引擎 | 数据层 |
+| 服务            | 语言 | 端口  | 类型        | 所属层级   |
+| --------------- | ---- | ----- | ----------- | ---------- |
+| RPCGateway      | C++  | 50051 | 核心框架    | 网关层     |
+| ServiceRegistry | C++  | 51051 | 核心框架    | 基础设施层 |
+| ConfigCenter    | C++  | 51052 | 核心框架    | 基础设施层 |
+| TracingService  | C++  | 51053 | 核心框架    | 可观测性层 |
+| MonitorService  | C++  | 51054 | 核心框架    | 可观测性层 |
+| AdminConsole    | C++  | 51055 | 核心框架    | 管理面板层 |
+| ServiceConsole  | C++  | 51056 | 核心框架    | 管理面板层 |
+| SecurityService | Rust | 51057 | 安全服务 🔐 | 安全层     |
+| CertService     | C++  | 51058 | 证书服务 🔐 | 安全层     |
+| UserService     | Rust | 50052 | 业务服务    | 业务层     |
+| ArticleService  | Go   | 50053 | 业务服务    | 业务层     |
+| BlogService     | Go   | 50054 | 业务服务    | 业务层     |
+| ImageService    | C++  | 50055 | 业务服务    | 业务层     |
+| VideoService    | Go   | 50056 | 业务服务    | 业务层     |
+| SearchService   | C++  | 50057 | 业务服务    | 业务层     |
+| MySQL           | C++  | 50058 | 业务服务    | 数据层     |
+| Vue 前端        | JS   | 60907 | 前端        | 前端层     |
+| Elasticsearch   | Java | 9200  | 搜索引擎    | 数据层     |
 
 ---
 
@@ -1202,6 +1185,7 @@ cd vue && npm install && npm run dev
 ## 📋 开发计划
 
 ### 阶段一：单体架构 ✅ 已归档
+
 - [x] C++ 原生 Socket HTTP 服务器
 - [x] HTTP 协议手动解析、多线程并发处理
 - [x] MySQL 数据库直连、Vue 3 前端界面
@@ -1211,17 +1195,20 @@ cd vue && npm install && npm run dev
 ### 阶段二：微服务架构 🔄 进行中
 
 #### Proto 仓库搭建 ✅ 已完成
+
 - [x] Proto 独立仓库搭建（proto/ 子仓库）
 - [x] Proto 目录结构规划（common/gateway/registry/config/tracing/monitor/user/article/blog/image/video/search/frontend/admin_console/service_console）
 - [x] 公共类型定义（RequestId、Pagination、ErrorCode 等通用 message）
 - [x] **security/** 目录规划 — 加密安全服务接口（新增）
 
 #### Proto 多语言编译 ✅ 已完成
+
 - [x] CMake 构建脚本 — 编译 C++ Protobuf 代码
 - [x] protoc 编译命令 — 支持 C++ / Go / Rust 三种语言
 - [x] 各语言 protoc 编译说明（--cpp_out / --go_out / --rust_out）
 
 #### AdminConsole 内部管理面板 (C++)
+
 - [ ] **Admin Web UI 前端** — 独立 HTML + JS 管理面板
   - [ ] 服务治理页面 — 查看所有核心服务状态、启停控制
   - [ ] 系统监控仪表盘 — CPU/内存/QPS/延迟实时展示
@@ -1238,6 +1225,7 @@ cd vue && npm install && npm run dev
   - [ ] 操作审计日志
 
 #### ServiceConsole 业务管理面板 (C++)
+
 - [ ] **Service Web UI 前端** — 独立 HTML + JS 管理面板
   - [ ] 用户管理页面 — 用户列表、权限管理、封禁/解封
   - [ ] 内容审核页面 — 文章/博客/图片/视频内容审核队列
@@ -1254,6 +1242,7 @@ cd vue && npm install && npm run dev
   - [ ] 操作审计日志
 
 #### SecurityService 加密安全服务 (Rust 🔐)
+
 - [ ] **Proto 接口定义** — 定义 security.proto
   - [ ] Encrypt/Decrypt — AES-256-GCM 对称加密接口
   - [ ] AsymmetricEncrypt/AsymmetricDecrypt — RSA-OAEP/ECIES 非对称加密接口
@@ -1283,6 +1272,7 @@ cd vue && npm install && npm run dev
   - [ ] 所有业务服务集成 SecurityService 客户端 SDK
 
 #### CertService 证书分发服务 (C++ 🔐)
+
 - [ ] **Proto 接口定义** — 定义 cert_service.proto
   - [ ] DistributeCert — SSL 证书分发接口
 - [ ] **证书管理实现**
@@ -1301,6 +1291,7 @@ cd vue && npm install && npm run dev
   - [ ] 对接 ServiceRegistry — 证书服务注册发现
 
 #### 业务微服务
+
 - [ ] **UserService**（Rust — 安全敏感，内存安全优势）
   - [ ] 用户注册/登录、Token 签发
   - [ ] Token 验证（对接 RPCGateway 鉴权中间件）
@@ -1333,6 +1324,7 @@ cd vue && npm install && npm run dev
 #### 前端 & 移动端
 
 ##### 阶段一：Vue 3 Web 前端（进行中）
+
 - [ ] **Vue 前端** HTTP/JSON 接入
   - [ ] 文章浏览
   - [ ] 搜索页面
@@ -1364,6 +1356,7 @@ cd vue && npm install && npm run dev
     - [ ] 自动化构建（GitHub Actions + Vercel/Netlify）
 
 ##### 阶段二：移动端原生 App（规划中）
+
 - [ ] **iOS App**（Swift）
   - [ ] TCP/Protobuf 客户端集成
   - [ ] 文章/博客/图片/视频浏览
@@ -1420,6 +1413,7 @@ cd vue && npm install && npm run dev
     - [ ] 签名证书管理（Google Play App Signing）
 
 ##### 阶段三：Qt Desktop App 📋 规划中
+
 - [ ] **Qt Desktop App**（C++ — 高性能桌面客户端）
   - [ ] **技术选型**：Qt 6 + C++17 + TCP/Protobuf 直连网关
   - [ ] **核心页面**
@@ -1442,9 +1436,9 @@ cd vue && npm install && npm run dev
     - [ ] macOS（Clang + Qt 6）
     - [ ] Linux（GCC + Qt 6）
   - [ ] **打包分发**
-      - [ ] Windows — NSIS / WiX 安装包
-      - [ ] macOS — DMG 磁盘映像 + 公证
-      - [ ] Linux — AppImage / Snap / Flatpak
+    - [ ] Windows — NSIS / WiX 安装包
+    - [ ] macOS — DMG 磁盘映像 + 公证
+    - [ ] Linux — AppImage / Snap / Flatpak
     - [ ] **独立可执行文件分发（Standalone Executable）**
       - [ ] **Windows x86_64**
         - [ ] 静态链接 Qt 6 运行时库，生成单个 `.exe` 文件
@@ -1474,23 +1468,27 @@ cd vue && npm install && npm run dev
 ### 阶段三：容器化部署 📋 规划中
 
 #### Docker 容器化
+
 - [ ] 每个微服务编写 Dockerfile（多阶段构建，减小镜像体积）
 - [ ] Docker Compose 本地编排（一键启动全部服务）
 - [ ] 镜像标签管理（语义化版本 + Git commit SHA）
 
 #### Kubernetes 部署
+
 - [ ] Kubernetes 资源清单（Deployment / Service / ConfigMap / Secret）
 - [ ] Helm Chart 包管理
 - [ ] 自动伸缩（HPA 基于 CPU/内存/QPS）
 - [ ] 服务网格（Istio 流量管理 + 安全策略）
 
 #### CI/CD 流水线
+
 - [ ] GitHub Actions / GitLab CI 自动化构建
 - [ ] 自动 proto 编译 + 多语言代码生成
 - [ ] 单元测试 + 集成测试
 - [ ] 镜像构建 + 推送 + 自动部署
 
 #### 可观测性
+
 - [ ] Prometheus 指标采集 + Grafana 仪表盘
 - [ ] Jaeger 分布式链路追踪
 - [ ] ELK / Loki 日志聚合
@@ -1499,24 +1497,28 @@ cd vue && npm install && npm run dev
 ### 阶段四：安全加固体系 🔐 规划中
 
 #### SecurityService 生产级部署
+
 - [ ] 高可用部署（多副本 + 负载均衡）
 - [ ] 多活密钥存储（跨区域密钥同步）
 - [ ] 密钥备份与灾难恢复
 - [ ] 性能优化（加密操作 < 1ms p99）
 
 #### 传输层安全全面加固
+
 - [ ] 所有服务间 RPC 通信启用 mTLS 双向认证
 - [ ] 证书自动轮换（CertService CA + ACME 协议集成）
 - [ ] 网关统一 TLS termination（支持 TLS 1.3 仅）
 - [ ] 证书监控与过期预警
 
 #### 存储层数据加密
+
 - [ ] MySQL TDE（透明数据加密）启用
 - [ ] MinIO / S3 对象存储加密（AES-256）
 - [ ] 文件上传自动加密/下载自动解密
 - [ ] 加密密钥与数据分离存储
 
 #### 安全运维
+
 - [ ] 审计日志系统（所有加解密操作、密钥操作可追溯）
 - [ ] 安全合规对标（GDPR / 等保 2.0 / SOC2）
 - [ ] 密钥硬安全模块（HSM）集成（AWS CloudHSM / Azure Key Vault）
@@ -1527,7 +1529,6 @@ cd vue && npm install && npm run dev
 ---
 
 ## 📬 联系方式
-
 
 - 项目维护者：[jyoushitou]
 - 邮箱：[xzt98948364@outlook.com]
@@ -1543,63 +1544,10 @@ cd vue && npm install && npm run dev
 
 本项目自身代码采用 **MIT License** 开源，详见 [LICENSE](./LICENSE) 文件。
 
-```
-MIT License
-
-Copyright (c) 2025 jyoushitou
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
 ### 第三方组件许可
 
 本项目使用了以下开源组件，特此致谢：
 
-| 组件 | 许可证 | 使用方式 | 说明 |
-|------|--------|---------|------|
-| **Protocol Buffers** | [Apache License 2.0](https://github.com/protocolbuffers/protobuf/blob/main/LICENSE) | 代码生成 | 通过 `protoc` 编译器生成序列化代码，生成的代码可自由使用 |
-| **Boost C++ Libraries** | [Boost Software License 1.0](https://www.boost.org/users/license.html) | header-only 包含 | 直接包含在 `boost/` 目录中，BSL-1.0 允许在 MIT 项目中使用 |
-| **Vue 3** | [MIT License](https://github.com/vuejs/core/blob/main/LICENSE) | 前端依赖 | 独立的前端项目 |
-| **Rust 依赖** (ring, rustls, tonic 等) | MIT / Apache 2.0 双许可 | 构建依赖 | 通过 Cargo 包管理器引入 |
-| **Go 依赖** | BSD-style 许可 | 构建依赖 | 通过 Go Modules 引入 |
-
-### 网络连接组件（不包含代码）
-
-以下组件仅通过网络连接或进程调用方式使用，**不包含其源代码**：
-
-| 组件 | 许可证 | 使用方式 |
-|------|--------|---------|
-| **Elasticsearch** | SSPL / Elastic License | 通过网络 API 调用 |
-| **MySQL** | GPL v2 | 通过网络连接 |
-| **FFmpeg** | LGPL v2.1+ | 通过进程调用 |
-
-### 许可证兼容性说明
-
-- **MIT + BSL-1.0**：完全兼容，Boost 库可直接包含在 MIT 项目中
-- **MIT + Apache 2.0**：完全兼容，Protobuf 生成的代码可在 MIT 项目中自由使用
-- **MIT + LGPL**：通过进程调用 FFmpeg 属于"合理使用"，不触发 LGPL 传染性
-- **MIT + SSPL**：通过网络 API 调用 Elasticsearch 不触发许可证限制
-
-### 版权声明
-
-```
-Protocol Buffers - Copyright (c) 2008 Google Inc. - Apache License 2.0
-Boost C++ Libraries - Copyright (c) 2003-2023 Boost Contributors - BSL-1.0
-Vue.js - Copyright (c) 2014-present Evan You - MIT License
-```
+| 组件                                   | 许可证                                                                              | 使用方式         | 说明                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------- |
+| **Pr
