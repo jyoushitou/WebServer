@@ -132,6 +132,87 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   │   └── service_console/            # 业务管理面板接口
 │   └── build/                          # 编译输出
 │
+├── common/                             # [子仓库] 公共库 (C++) ✅ 核心
+│   ├── include/                        # 公共头文件
+│   │   ├── common/                     # 公共模块
+│   │   │   ├── logger.h                # 日志系统（统一日志格式、级别控制、文件轮转）
+│   │   │   ├── config.h                # 配置解析（JSON/YAML 配置加载、环境变量覆盖）
+│   │   │   ├── thread_pool.h           # 线程池（通用任务队列、动态扩缩容）
+│   │   │   ├── timer.h                 # 定时器（高精度定时、定时任务调度）
+│   │   │   ├── buffer.h                # 缓冲区（环形缓冲区、动态扩容）
+│   │   │   ├── singleton.h             # 单例模板（线程安全、懒加载）
+│   │   │   └── noncopyable.h           # 不可拷贝基类
+│   │   ├── network/                    # 网络模块
+│   │   │   ├── tcp_connection.h        # TCP 连接封装（读写缓冲区、连接状态管理）
+│   │   │   ├── tcp_server.h            # TCP 服务器（Acceptor、连接管理、事件回调）
+│   │   │   ├── tcp_client.h            # TCP 客户端（连接池、重连机制）
+│   │   │   ├── event_loop.h            # 事件循环（epoll 封装、事件分发）
+│   │   │   ├── event_loop_thread_pool.h # 事件循环线程池（多 Reactor 模型）
+│   │   │   └── socket_utils.h          # Socket 工具函数（地址解析、非阻塞设置）
+│   │   ├── rpc/                        # RPC 模块
+│   │   │   ├── rpc_channel.h           # RPC 通道（服务发现、负载均衡、连接复用）
+│   │   │   ├── rpc_controller.h        # RPC 控制器（超时控制、取消操作）
+│   │   │   ├── rpc_codec.h             # RPC 编解码（Protobuf 序列化/反序列化、帧协议）
+│   │   │   ├── rpc_server.h            # RPC 服务器（方法注册、请求分发）
+│   │   │   └── rpc_client.h            # RPC 客户端（异步调用、回调管理）
+│   │   ├── serialize/                  # 序列化模块
+│   │   │   ├── json_serializer.h       # JSON 序列化（Boost.JSON 封装）
+│   │   │   ├── protobuf_serializer.h   # Protobuf 序列化（消息编解码、字段反射）
+│   │   │   └── binary_serializer.h     # 二进制序列化（紧凑编码、大端/小端转换）
+│   │   ├── crypto/                     # 加密模块
+│   │   │   ├── hash.h                  # 哈希函数（MD5、SHA256、CRC32）
+│   │   │   ├── base64.h                # Base64 编解码
+│   │   │   └── uuid.h                  # UUID 生成（基于 Boost.UUID）
+│   │   └── utility/                    # 工具模块
+│   │       ├── string_utils.h          # 字符串工具（分割、拼接、替换、格式化）
+│   │       ├── file_utils.h            # 文件工具（读写、遍历、路径操作）
+│   │       ├── time_utils.h            # 时间工具（时间戳转换、格式化、时区处理）
+│   │       ├── async_task.h            # 异步任务（Future/Promise 模式）
+│   │       └── error.h                 # 错误处理（错误码、异常封装）
+│   ├── src/                            # 公共源文件
+│   │   ├── common/                     # 公共模块实现
+│   │   │   ├── logger.cpp
+│   │   │   ├── config.cpp
+│   │   │   ├── thread_pool.cpp
+│   │   │   ├── timer.cpp
+│   │   │   └── buffer.cpp
+│   │   ├── network/                    # 网络模块实现
+│   │   │   ├── tcp_connection.cpp
+│   │   │   ├── tcp_server.cpp
+│   │   │   ├── tcp_client.cpp
+│   │   │   ├── event_loop.cpp
+│   │   │   ├── event_loop_thread_pool.cpp
+│   │   │   └── socket_utils.cpp
+│   │   ├── rpc/                        # RPC 模块实现
+│   │   │   ├── rpc_channel.cpp
+│   │   │   ├── rpc_controller.cpp
+│   │   │   ├── rpc_codec.cpp
+│   │   │   ├── rpc_server.cpp
+│   │   │   └── rpc_client.cpp
+│   │   ├── serialize/                  # 序列化模块实现
+│   │   │   ├── json_serializer.cpp
+│   │   │   ├── protobuf_serializer.cpp
+│   │   │   └── binary_serializer.cpp
+│   │   ├── crypto/                     # 加密模块实现
+│   │   │   ├── hash.cpp
+│   │   │   ├── base64.cpp
+│   │   │   └── uuid.cpp
+│   │   └── utility/                    # 工具模块实现
+│   │       ├── string_utils.cpp
+│   │       ├── file_utils.cpp
+│   │       ├── time_utils.cpp
+│   │       ├── async_task.cpp
+│   │       └── error.cpp
+│   ├── tests/                          # 单元测试
+│   │   ├── test_logger.cpp
+│   │   ├── test_thread_pool.cpp
+│   │   ├── test_tcp_server.cpp
+│   │   ├── test_rpc_codec.cpp
+│   │   ├── test_json_serializer.cpp
+│   │   └── test_string_utils.cpp
+│   ├── CMakeLists.txt                  # CMake 构建配置（编译为静态库 common.lib）
+│   └── README.md                       # 公共库说明文档
+│
 ├── AdminConsole/                       # [子仓库] 内部管理面板 (C++) ✅ 核心
 │   └── 统一管控核心基础设施（网关/注册发现/配置中心/链路追踪/监控告警）的独立 Web 控制台
 │

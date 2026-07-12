@@ -19,3 +19,6 @@
 [submodule "UserService"]
 	path = UserService
 	url = https://github.com/jyoushitou/WebService_Rust_UserService.git
+[submodule "common"]
+	path = common
+	url = https://github.com/jyoushitou/Service_Common.git
