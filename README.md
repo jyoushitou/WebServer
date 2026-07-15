@@ -10,7 +10,7 @@
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-6.0-%23008080?style=flat-square&logo=ffmpeg)
 ![Vue](https://img.shields.io/badge/Vue-3-%234FC08D?style=flat-square&logo=vue.js)
 ![Protobuf](https://img.shields.io/badge/Protobuf-3.15-%23FF6C37?style=flat-square&logo=protocol-buffers)
-![Elasticsearch](https://img.shields.io/badge/Elasticsearch-7-%23005571?style=flat-square&logo=elasticsearch)
+![Tantivy](https://img.shields.io/badge/Tantivy-0.22-%23E95420?style=flat-square&logo=rust)
 ![MySQL](https://img.shields.io/badge/MySQL-8-%234479A1?style=flat-square&logo=mysql)
 ![Docker](https://img.shields.io/badge/Docker-24-%232496ED?style=flat-square&logo=docker)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-%23326CE5?style=flat-square&logo=kubernetes)
@@ -234,7 +234,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 │   └── 视频上传、FFmpeg 转码任务编排调度、HLS 切片分发、流媒体播放
 │
 ├── SearchService/                      # [子仓库] 搜索服务 (C++)
-│   └── 全文检索、搜索排序评分、搜索建议、Elasticsearch 索引管理，C++ 保证毫秒级响应
+│   └── 全文检索、搜索排序评分、搜索建议、Tantivy 索引管理，C++ 保证毫秒级响应
 │
 ├── vue/                                # [子仓库] Vue 3 前端
 │   └── 用户端 Web 应用，Vue 3 + TypeScript，通过 HTTP/JSON 与网关通信
@@ -306,7 +306,7 @@ WebServer/                              # 总仓库（Git 根仓库）
 ├────────────────┴──────────────┴──────────────┴──────────────┴──────────────────────────────────┤
 │                      所有业务服务启动时从 CertService 获取 mTLS 证书                          │
 ├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│               SearchService (C++ :50057)   ←→   Elasticsearch (:9200)                           │
+│               SearchService (C++ :50057)   ←→   Tantivy (本地索引引擎)                           │
 │               MySQL (C++ :50058) ←→   MySQL (:3306)                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -1153,7 +1153,7 @@ cd vue && npm install && npm run dev
 | 50051–50057 | 业务微服务端口      | 网关 + 6 个业务服务                                              |
 | 51051–51057 | 核心框架 + 安全端口 | 注册发现/配置中心/链路追踪/监控告警 + 管理面板 + SecurityService |
 | 60907       | 前端端口            | Vue 3 开发服务器                                                 |
-| 9200        | 搜索引擎            | Elasticsearch                                                    |
+| 9200        | 搜索引擎            | Tantivy（本地索引引擎）                                          |
 
 #### 端口明细
 
@@ -1176,7 +1176,7 @@ cd vue && npm install && npm run dev
 | SearchService   | C++  | 50057 | 业务服务    | 业务层     |
 | MySQL           | C++  | 50058 | 业务服务    | 数据层     |
 | Vue 前端        | JS   | 60907 | 前端        | 前端层     |
-| Elasticsearch   | Java | 9200  | 搜索引擎    | 数据层     |
+| Tantivy         | Rust | 本地   | 搜索引擎    | 数据层     |
 
 ---
 
@@ -1316,7 +1316,7 @@ cd vue && npm install && npm run dev
   - [ ] HLS 切片分发
   - [ ] 转码进度查询
 - [ ] **SearchService**（C++ — ES 集成、高性能排序）
-  - [ ] Elasticsearch 集成
+  - [ ] Tantivy 集成（本地全文搜索引擎，Rust 实现，替代 Elasticsearch）
   - [ ] 全文搜索与排序
   - [ ] 搜索建议（前缀匹配）
   - [ ] 索引管理（重建/同步）
