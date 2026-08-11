@@ -2,14 +2,12 @@
 .vscode/
 
 # C++ 构建输出
-cpp/build/
+RPCGateway/build/
 
 # Vue 构建产物
 vue/dist/
 vue/node_modules/
 
-# html源码
-html_Src
 
 # 部署生成的文件
 deploy/certs/

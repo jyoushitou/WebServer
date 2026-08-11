@@ -1,0 +1,21 @@
+{
+  "name": "webserver",
+  "version": "1.0.0",
+  "description": "> **从零实现的 C++ HTTP 服务器 → HTTP/2 RPC 微服务架构演进** > > 用最底层的方式理解 Web 工作原理，用微服务架构承载业务扩展",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jyoushitou/WebService.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jyoushitou/WebService/issues"
+  },
+  "homepage": "https://github.com/jyoushitou/WebService#readme"
+}

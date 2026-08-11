@@ -10,3 +10,12 @@ AllowShortFunctionsOnASingleLine: None
 NamespaceIndentation: All
 SortIncludes: false
 AlignAfterOpenBracket: Align
+
+# protobuf 专用排版
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+SpaceBeforeLBrace: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
+# proto注释、空格风格
+CommentPragmas: "^ IWYU pragma:"
