@@ -1,8 +1,13 @@
 ﻿# IDE 配置
 .vscode/
+.vs/
+
+# 计划
+计划/
 
 # C++ 构建输出
 RPCGateway/build/
+proto/build
 
 # Vue 构建产物
 vue/dist/
