@@ -22,3 +22,6 @@
 [submodule "ConfigCenter"]
 	path = ConfigCenter
 	url = https://github.com/jyoushitou/WebService_cpp_ConfigCenter.git
+[submodule "Tracing"]
+	path = Tracing
+	url = https://github.com/jyoushitou/WebService_cpp_Tracing.git
