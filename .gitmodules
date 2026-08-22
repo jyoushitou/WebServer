@@ -25,3 +25,6 @@
 [submodule "Tracing"]
 	path = Tracing
 	url = https://github.com/jyoushitou/WebService_cpp_Tracing.git
+[submodule "Blog"]
+	path = Blog
+	url = https://github.com/jyoushitou/WebService_rust_blog.git
