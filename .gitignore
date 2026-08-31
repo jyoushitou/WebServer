@@ -1,6 +1,7 @@
 ﻿# IDE 配置
 .vscode/
 .vs/
+build/
 
 # 计划
 计划/
@@ -8,6 +9,9 @@
 # C++ 构建输出
 RPCGateway/build/
 proto/build
+
+# Rust构建产物
+Blog/target
 
 # Vue 构建产物
 vue/dist/
@@ -21,5 +25,9 @@ deploy/nginx/
 # 部署生成的文件
 deploy/certs/
 deploy/nginx/
+
+# vue前端
+html/
+
 
 # 如果有其他构建产物，也可以加在这里
