@@ -30,4 +30,7 @@ deploy/nginx/
 html/
 
 
+# 博客仓库
+BlogData/
+
 # 如果有其他构建产物，也可以加在这里
